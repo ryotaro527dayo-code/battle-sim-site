@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>猛獣バトルシミュレーター</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e0c08;
+      --panel: #1e1a10;
+      --panel2: #2a2418;
+      --border: #5a4a20;
+      --gold: #d4a520;
+      --gold2: #f0c040;
+      --red: #c0392b;
+      --green: #27ae60;
+      --blue: #2980b9;
+      --purple: #8e44ad;
+      --text: #e8d5a0;
+      --text-dim: #9a8060;
+      --rage-color: #e67e22;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      color: var(--gold2);
+      text-shadow: 0 0 20px rgba(212,165,32,0.5);
+      margin-bottom: 6px;
+      letter-spacing: 0.1em;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      margin-bottom: 24px;
+    }
+
+    /* 設定 */
+    .settings {
+      max-width: 500px;
+      margin: 0 auto 20px;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+    .settings label { white-space: nowrap; }
+    .top-controls {
+      max-width: 860px;
+      margin: 0 auto 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .language-switch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+    }
+    .language-switch select {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .settings input[type=number] {
+      width: 60px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    /* キャラ選択 */
+    .char-select-area {
+      display: flex;
+      gap: 16px;
+      max-width: 800px;
+      margin: 0 auto 20px;
+      align-items: center;
+    }
+    .vs-label {
+      color: var(--gold);
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(212,165,32,0.8);
+      white-space: nowrap;
+    }
+    .char-selector {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .char-selector select {
+      width: 100%;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .char-preview {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+    .char-preview .name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold2);
+      margin-bottom: 6px;
+    }
+    .stat-row { display: flex; justify-content: space-between; }
+    .stat-val { color: var(--text); font-weight: 500; }
+    .skill-tag {
+      display: inline-block;
+      background: rgba(212,165,32,0.15);
+      border: 1px solid rgba(212,165,32,0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.72rem;
+      color: var(--gold);
+      margin: 2px 2px 0 0;
+    }
+    .skill-tag.passive { background: rgba(39,174,96,0.15); border-color: rgba(39,174,96,0.3); color: #2ecc71; }
+    .skill-tag.battlecry { background: rgba(231,76,60,0.15); border-color: rgba(231,76,60,0.3); color: #e74c3c; }
+
+    /* ボタン */
+    .btn-area {
+      text-align: center;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 32px;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #b8860b, #d4a520, #f0c040);
+      color: #0e0c08;
+      box-shadow: 0 4px 15px rgba(212,165,32,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,165,32,0.6); }
+    .btn-secondary {
+      background: var(--panel2);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { color: var(--text); border-color: var(--gold); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* バトルエリア */
+    .battle-area {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* HP/レイジバー */
+    .fighters {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .fighter-card {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .fighter-card.winner { border-color: var(--gold); box-shadow: 0 0 20px rgba(212,165,32,0.3); }
+    .fighter-card.loser { opacity: 0.5; }
+    .fighter-name {
+      font-weight: 700;
+      color: var(--gold2);
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+    .fighter-lv { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 10px; }
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-bottom: 3px;
+    }
+    .bar-wrap {
+      background: rgba(0,0,0,0.4);
+      border-radius: 4px;
+      height: 12px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .bar-inner {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+    .hp-bar { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+    .hp-bar.low { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+    .hp-bar.mid { background: linear-gradient(90deg, #e67e22, #f39c12); }
+    .rage-bar { background: linear-gradient(90deg, #d35400, var(--rage-color)); }
+
+    /* バトルログ */
+    .log-area {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 0.82rem;
+      line-height: 1.7;
+    }
+    .log-area::-webkit-scrollbar { width: 6px; }
+    .log-area::-webkit-scrollbar-track { background: var(--panel2); }
+    .log-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .log-turn { color: var(--gold); font-weight: 700; margin-top: 10px; border-top: 1px solid rgba(90,74,32,0.4); padding-top: 8px; }
+    .log-turn:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+    .log-attack { color: var(--text); }
+    .log-skill { color: #f39c12; }
+    .log-dodge { color: #3498db; }
+    .log-passive { color: #2ecc71; }
+    .log-crit { color: #e74c3c; font-weight: 700; }
+    .log-double { color: #9b59b6; }
+    .log-winner { color: var(--gold2); font-size: 1.1rem; font-weight: 700; text-align: center; padding: 12px; }
+    .log-start { color: var(--text-dim); }
+    .log-debuff { color: #e74c3c; }
+    .log-buff { color: #2ecc71; }
+    .placeholder {
+      color: var(--text-dim);
+      text-align: center;
+      padding: 40px;
+      font-size: 0.9rem;
+    }
+
+    /* スキル編集 */
+    .skill-edit-btn {
+      width: 100%; margin-top: 8px;
+      background: transparent;
+      border: 1px dashed var(--border);
+      color: var(--text-dim);
+      padding: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .skill-edit-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .skill-editor {
+      margin-top: 8px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 0.75rem;
+    }
+    .skill-edit-row { margin-bottom: 10px; }
+    .skill-edit-row:last-child { margin-bottom: 0; }
+    .skill-edit-name { color: var(--gold); font-weight: 500; margin-bottom: 5px; }
+    .skill-edit-fields { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-edit-field { display: flex; align-items: center; gap: 4px; color: var(--text-dim); }
+    .skill-edit-field input {
+      width: 58px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+    .skill-edit-field input:focus { outline: none; border-color: var(--gold); }
+
+    /* モンテカルロ結果 */
+    .monte-result {
+      margin-top: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: none;
+    }
+    .monte-result h3 { color: var(--gold); margin-bottom: 12px; font-size: 0.95rem; }
+    .monte-bar-wrap { background: rgba(0,0,0,0.4); border-radius: 6px; height: 28px; overflow: hidden; display: flex; margin-bottom: 8px; }
+    .monte-bar-a { background: linear-gradient(90deg, #2980b9, #3498db); display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 0.8rem; font-weight: 700; color: white; transition: width 0.6s ease; }
+    .monte-bar-b { background: linear-gradient(90deg, #c0392b, #e74c3c); display: flex; align-items: center; padding-left: 8px; font-size: 0.8rem; font-weight: 700; color: white; transition: width 0.6s ease; }
+    .monte-names { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-dim); }
+    .monte-stats { margin-top: 8px; font-size: 0.78rem; color: var(--text-dim); display: flex; gap: 16px; flex-wrap: wrap; }
+    .monte-stats span { color: var(--text); }
+
+    /* 設定サマリー */
+    .config-summary {
+      max-width: 820px;
+      margin: 0 auto 16px;
+      display: none;
+      gap: 12px;
+    }
+    .config-team-block {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .config-team-title {
+      font-weight: 700;
+      color: var(--gold);
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+    .config-char-row {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(90,74,32,0.3);
+    }
+    .config-char-row:last-child { border-bottom: none; margin-bottom: 0; }
+    .config-char-name { font-weight: 700; color: var(--gold2); font-size: 0.83rem; margin-bottom: 3px; }
+    .config-char-stats { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 4px; }
+    .config-char-stats span { color: var(--text); }
+    .config-skill-row { font-size: 0.70rem; color: var(--text-dim); line-height: 1.6; }
+    .config-skill-row b { color: #e8a030; }
+    .config-empty { color: var(--text-dim); font-size: 0.78rem; }
+
+    /* 6v6 チームビルダー */
+    .teams-area {
+      display: flex;
+      gap: 12px;
+      max-width: 860px;
+      margin: 0 auto 20px;
+      align-items: flex-start;
+    }
+    .team-panel {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .team-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--gold2);
+      text-align: center;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+    .team-slot-wrap { margin-bottom: 4px; }
+    .team-slot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--panel2);
+      border-radius: 5px;
+      padding: 5px 7px;
+    }
+    .slot-num {
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      width: 14px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .slot-select {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 3px 5px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: inherit;
+      cursor: pointer;
+      min-width: 0;
+    }
+    .slot-agi {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .slot-edit-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 1px 3px;
+      flex-shrink: 0;
+    }
+    .slot-edit-btn:hover { color: var(--gold); }
+    .slot-editor {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-top: 3px;
+      padding: 8px;
+      font-size: 0.73rem;
+    }
+    .slot-editor .skill-edit-row { margin-bottom: 7px; }
+    .slot-editor .skill-edit-row:last-child { margin-bottom: 0; }
+    .slot-editor .skill-edit-name { color: var(--gold); margin-bottom: 4px; }
+    .slot-editor .skill-edit-fields { display: flex; flex-wrap: wrap; gap: 6px; }
+    .slot-editor .skill-edit-field { display: flex; align-items: center; gap: 3px; color: var(--text-dim); }
+    .slot-editor .skill-edit-field input {
+      width: 52px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      text-align: center;
+    }
+    /* ロスター（生存状況） */
+    .team-rosters {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 860px;
+      margin: 0 auto 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+    }
+    .roster-side { display: flex; gap: 5px; align-items: center; }
+    .roster-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.58rem;
+      text-align: center;
+      line-height: 1.2;
+      padding: 2px;
+      transition: all 0.3s;
+      color: var(--text-dim);
+    }
+    .roster-icon.alive { border-color: var(--green); color: var(--text); background: rgba(39,174,96,0.12); }
+    .roster-icon.current { border-color: var(--gold); color: var(--gold2); background: rgba(212,165,32,0.18); box-shadow: 0 0 8px rgba(212,165,32,0.4); }
+    .roster-icon.dead { opacity: 0.25; }
+    .roster-vs { color: var(--gold); font-weight: 700; font-size: 1rem; }
+
+    @media (max-width: 600px) {
+      .teams-area { flex-direction: column; }
+      .fighters { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-controls">
+  <label class="language-switch">
+    <span data-i18n="language">言語</span>
+    <select id="languageSelect" onchange="setLanguage(this.value)">
+      <option value="ja">日本語</option>
+      <option value="en">English</option>
+      <option value="ru">Русский</option>
+      <option value="zh">中文</option>
+    </select>
+  </label>
+</div>
+
+<h1>⚔️ <span data-i18n="appTitle">猛獣バトルシミュレーター</span> <span style="font-size:1rem;color:var(--gold)">6v6</span></h1>
+<p class="subtitle" data-i18n="subtitle">サベージサバイバル 恐竜の咆哮 | 戦闘予測ツール</p>
+
+<div class="settings">
+  <span style="color:var(--text-dim);font-size:0.85rem" data-i18n="rageFormula">レイジ獲得量: 戦意 × 0.2778（キャラごとに自動計算）</span>
+</div>
+
+<div class="teams-area">
+  <div class="team-panel">
+    <div class="team-title" data-i18n="teamAOwn">チームA（自分）</div>
+    <div id="slotsA"></div>
+  </div>
+  <div class="vs-label" style="padding-top:40px">VS</div>
+  <div class="team-panel">
+    <div class="team-title" data-i18n="teamBEnemy">チームB（相手）</div>
+    <div id="slotsB"></div>
+  </div>
+</div>
+
+<div class="btn-area">
+  <button class="btn btn-primary" onclick="startBattle6v6()">⚔️ <span data-i18n="startBattle">戦闘開始</span></button>
+  <button class="btn btn-secondary" onclick="runMonteCarlo6v6()">🎲 <span data-i18n="monteButton">1000回シミュレーション</span></button>
+  <button class="btn" style="background:var(--panel2);border:1px solid var(--border);color:var(--text-dim);font-size:0.8rem;padding:8px 14px;" onclick="toggleConfigSummary()">📋 <span data-i18n="showConfig">現在の設定を確認</span></button>
+</div>
+
+<div class="config-summary" id="configSummary">
+  <div class="config-team-block" id="configTeamA"></div>
+  <div class="config-team-block" id="configTeamB"></div>
+</div>
+
+<div class="battle-area">
+  <div class="team-rosters" id="teamRosters" style="display:none">
+    <div class="roster-side" id="rosterA"></div>
+    <div class="roster-vs">VS</div>
+    <div class="roster-side" id="rosterB"></div>
+  </div>
+  <div class="fighters" id="fighters" style="display:none">
+    <div class="fighter-card" id="cardA">
+      <div class="fighter-name" id="nameA">-</div>
+      <div class="fighter-lv" id="lvA">-</div>
+      <div class="bar-label"><span>HP</span><span id="hpTextA">-</span></div>
+      <div class="bar-wrap"><div class="bar-inner hp-bar" id="hpBarA" style="width:100%"></div></div>
+      <div class="bar-label"><span data-i18n="rage">レイジ</span><span id="rageTextA">0/100</span></div>
+      <div class="bar-wrap"><div class="bar-inner rage-bar" id="rageBarA" style="width:0%"></div></div>
+    </div>
+    <div class="fighter-card" id="cardB">
+      <div class="fighter-name" id="nameB">-</div>
+      <div class="fighter-lv" id="lvB">-</div>
+      <div class="bar-label"><span>HP</span><span id="hpTextB">-</span></div>
+      <div class="bar-wrap"><div class="bar-inner hp-bar" id="hpBarB" style="width:100%"></div></div>
+      <div class="bar-label"><span data-i18n="rage">レイジ</span><span id="rageTextB">0/100</span></div>
+      <div class="bar-wrap"><div class="bar-inner rage-bar" id="rageBarB" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="log-area" id="logArea">
+    <div class="placeholder" data-i18n="placeholder">「戦闘開始」を押すと戦闘ログが表示されます</div>
+  </div>
+
+  <div class="monte-result" id="monteResult">
+    <h3>🎲 <span data-i18n="monteTitle">モンテカルロシミュレーション結果（1000回）</span></h3>
+    <div class="monte-bar-wrap">
+      <div class="monte-bar-a" id="monteBarA" style="width:50%">50%</div>
+      <div class="monte-bar-b" id="monteBarB" style="width:50%">50%</div>
+    </div>
+    <div class="monte-names">
+      <span id="monteNameA">-</span>
+      <span id="monteNameB">-</span>
+    </div>
+    <div class="monte-stats" id="monteStats"></div>
+  </div>
+</div>
+
+<script>
+// ===== 多言語表示 =====
+const I18N = {
+  ja: {
+    language: '言語',
+    appTitle: '猛獣バトルシミュレーター',
+    subtitle: 'サベージサバイバル 恐竜の咆哮 | 戦闘予測ツール',
+    rageFormula: 'レイジ獲得量: 戦意 × 0.2778（キャラごとに自動計算）',
+    teamAOwn: 'チームA（自分）',
+    teamBEnemy: 'チームB（相手）',
+    startBattle: '戦闘開始',
+    monteButton: '1000回シミュレーション',
+    showConfig: '現在の設定を確認',
+    rage: 'レイジ',
+    placeholder: '「戦闘開始」を押すと戦闘ログが表示されます',
+    monteTitle: 'モンテカルロシミュレーション結果（1000回）',
+    none: '── なし ──',
+    ownTeam: '自チーム',
+    previousEnemies: '前の相手',
+    skillAdjust: 'スキル調整',
+    chooseCharacter: 'キャラを選択してください',
+    noAdjustments: '調整項目なし',
+    unavailable: '調整不可',
+    baseStats: '基礎ステータス',
+    startHp: '開始HP（途中参戦用・空白=満HP）',
+    fullHp: '満HP',
+    example: '例',
+    attackRage: '攻撃レイジ:',
+    defenseRage: '防御レイジ:',
+    attackShort: '攻',
+    defenseShort: '防',
+    teamA: 'チームA',
+    teamB: 'チームB',
+    unselected: '未選択',
+    cost: 'コスト',
+    rageGainShort: 'レイジ+',
+    perAction: '/回',
+    needTeams: '両チームにキャラを1体以上設定してください',
+    normalAttack: '通常攻撃',
+    battleStart: '━━━━━ 6v6 戦闘開始 ━━━━━',
+    matchup: (a, b) => `── ${a} vs ${b} ──`,
+    action: (name) => `── ${name}の行動 ──`,
+    defeated: (name) => `💀 ${name} 撃破！`,
+    joins: (team, name, hp) => `⚡ ${team}: ${name} 参戦！ (HP:${hp})`,
+    timeUp: (team) => `⏱️ 時間切れ！HP残量で${team}の勝利！`,
+    teamWin: (team, aliveA, aliveB) => `🏆 ${team}の勝利！（A生存:${aliveA}体 / B生存:${aliveB}体）`,
+    teamList: (team, names) => `${team}: ${names}`,
+    undying: (name, hp) => `💪 ${name}の【${entity('skill_undying')}】発動！致死ダメージを耐えHP${hp}で復活！`,
+    hardenUse: (name, skill, pct) => `🛡️ ${name}が【${skill}】を発動！被ダメ-${pct}%`,
+    thornsUse: (name, skill, pct) => `🌵 ${name}が【${skill}】を発動！次の被ダメ${pct}%反射準備`,
+    purifyUse: (name, skill, stacks, heal) => `✨ ${name}が【${skill}】を発動！デバフ${stacks}スタック除去 HP+${heal}`,
+    skillUse: (name, skill) => `🔥 ${name}が【${skill}】を発動！`,
+    dodgeNormal: (def, atk) => `⚠️ ${def}が回避態勢のため${atk}は通常攻撃を選択`,
+    hardenTriggered: (name) => `🛡️ ${name}の${entity('skill_harden')}が発動！ダメージ軽減`,
+    dodge: (name, pct) => `💨 ${name}が攻撃を回避！その後${pct}%被ダメUP(3ターン)`,
+    bleedBefore: (name, dmg, hp) => `🩸 ${name}が攻撃前に出血！${dmg}ダメージ [残HP:${hp}]`,
+    thornsReflect: (def, atk, dmg, hp) => `🌵 ${def}の${entity('skill_thorns')}！${atk}に${dmg}反射ダメージ [${atk}残HP:${hp}]`,
+    speedDebuffEnd: (name) => `✨ ${name}の速度デバフ解除`,
+    attackLog: (atk, def, skill, dmg, label, hp) => `⚔️ ${atk} → ${def} ${skill}: ${dmg}ダメージ${label} [残HP:${hp}]`,
+    damageBonus: (pct) => ` (被ダメ+${pct}%)`,
+    comboDodge: (name, pct) => `💨 ${name}が連撃を回避！その後${pct}%被ダメUP(3ターン)`,
+    carryOver: (name) => `（→${name}へキャリーオーバー）`,
+    comboHit: (dmg, carry, name, hp) => `   └ 連撃！${dmg}追加ダメージ${carry} [${name}残HP:${hp}]`,
+    slowEffect: (name, down, agi) => `   └ ${name}の敏捷性-${down}！(${agi}) 2回攻撃まで継続`,
+    breakthroughEffect: (name, atkDown, defDown) => `   └ ${name}の攻撃レイジ-${atkDown}・防御レイジ-${defDown}！`,
+    quakeEffect: (pct) => `   └ 大地震撼！${pct}%ダメージ攻撃`,
+    benchDamage: (name, dmg, hp) => `   └ 控え【${name}】に${dmg}ダメージ [残HP:${hp}]`,
+    lacerateEffect: (name, pct) => `   └ 傷口裂傷！${name}は3回攻撃前に最大HP${pct}%出血`,
+    drainEffect: (name, heal, hp) => `   └ 吸血！${name}がHP+${heal}回復 [残HP:${hp}]`,
+    tormentStart: (name, pct) => `【${entity('skill_torment')}】${name}が発動！双方の被ダメ+${pct}%（永続）`,
+    heavyWoundStart: (name) => `【${entity('skill_heavy_wound')}】${name}：最初の攻撃を回避する構え`,
+    attackTalentStart: (name) => `【${entity('skill_attack_talent')}】${name}：攻撃レイジ+3/回`,
+    waverStart: (name) => `【${entity('skill_waver')}】${name}：最初3攻撃-10%、次3攻撃+15%`,
+    winRate: (team, pct, name) => `${team}勝率: <span>${pct}%</span>（${name}）`,
+    judgement: (team, wins, n) => `判定: <span style="color:var(--gold2);font-weight:700">${team}が優勢（${wins}/${n}勝）</span>`,
+    hpRow: (team, min, avg, max, surv) => `${team}勝利時 残HP合計: 最小 <span>${min}</span> / 平均 <span>${avg}</span> / 最大 <span>${max}</span>　平均生存 <span>${surv}</span>体`,
+    statLine: (min, avg, max, extra) => `最小 ${min} / 平均 ${avg} / 最大 ${max}${extra}`,
+    noKong: 'なし',
+    noLv61: 'なし（Lv61生存なし）',
+    lv100Hp: '🔍 Lv100がLv61と対戦開始時HP:',
+    lv61FinalHp: '🟢 Lv61最終HP（チームA勝利・生存時）:',
+    casesUnder: (count, hp) => `（${count}件が${hp}HP以下）`,
+    casesUnderTotal: (under, hp, total) => `（${under}件が${hp}HP以下・${total}件中）`,
+  },
+  en: {
+    language: 'Language',
+    appTitle: 'Beast Battle Simulator',
+    subtitle: 'Savage Survival: Dinosaur Roar | Battle prediction tool',
+    rageFormula: 'Rage gain: Will × 0.2778 (calculated per character)',
+    teamAOwn: 'Team A (You)',
+    teamBEnemy: 'Team B (Opponent)',
+    startBattle: 'Start Battle',
+    monteButton: 'Run 1000 Simulations',
+    showConfig: 'Review Current Setup',
+    rage: 'Rage',
+    placeholder: 'Press Start Battle to show the battle log',
+    monteTitle: 'Monte Carlo Simulation Result (1000 runs)',
+    none: '── None ──',
+    ownTeam: 'Your Team',
+    previousEnemies: 'Previous Opponents',
+    skillAdjust: 'Adjust skills',
+    chooseCharacter: 'Select a character',
+    noAdjustments: 'No adjustable items',
+    unavailable: 'Not adjustable',
+    baseStats: 'Base stats',
+    startHp: 'Starting HP (for mid-battle entry; blank = full HP)',
+    fullHp: 'Full HP',
+    example: 'Example',
+    attackRage: 'Attack rage:',
+    defenseRage: 'Defense rage:',
+    attackShort: 'Atk',
+    defenseShort: 'Def',
+    teamA: 'Team A',
+    teamB: 'Team B',
+    unselected: 'Not selected',
+    cost: 'Cost',
+    rageGainShort: 'Rage +',
+    perAction: '/action',
+    needTeams: 'Set at least one character on both teams.',
+    normalAttack: 'Normal Attack',
+    battleStart: '━━━━━ 6v6 Battle Start ━━━━━',
+    matchup: (a, b) => `── ${a} vs ${b} ──`,
+    action: (name) => `── ${name}'s action ──`,
+    defeated: (name) => `💀 ${name} defeated!`,
+    joins: (team, name, hp) => `⚡ ${team}: ${name} enters! (HP:${hp})`,
+    timeUp: (team) => `⏱️ Time up! ${team} wins by remaining HP!`,
+    teamWin: (team, aliveA, aliveB) => `🏆 ${team} wins! (A alive:${aliveA} / B alive:${aliveB})`,
+    teamList: (team, names) => `${team}: ${names}`,
+    undying: (name, hp) => `💪 ${name}'s [${entity('skill_undying')}] activates! Survives lethal damage and revives with ${hp} HP!`,
+    hardenUse: (name, skill, pct) => `🛡️ ${name} activates [${skill}]! Damage taken -${pct}%`,
+    thornsUse: (name, skill, pct) => `🌵 ${name} activates [${skill}]! Reflect ${pct}% of the next damage`,
+    purifyUse: (name, skill, stacks, heal) => `✨ ${name} activates [${skill}]! Removes ${stacks} debuff stacks, HP +${heal}`,
+    skillUse: (name, skill) => `🔥 ${name} activates [${skill}]!`,
+    dodgeNormal: (def, atk) => `⚠️ ${def} is ready to dodge, so ${atk} chooses a normal attack`,
+    hardenTriggered: (name) => `🛡️ ${name}'s ${entity('skill_harden')} triggers! Damage reduced`,
+    dodge: (name, pct) => `💨 ${name} dodges! Damage taken +${pct}% for 3 turns`,
+    bleedBefore: (name, dmg, hp) => `🩸 ${name} bleeds before attacking! ${dmg} damage [HP left:${hp}]`,
+    thornsReflect: (def, atk, dmg, hp) => `🌵 ${def}'s ${entity('skill_thorns')}! Reflects ${dmg} damage to ${atk} [${atk} HP:${hp}]`,
+    speedDebuffEnd: (name) => `✨ ${name}'s speed debuff ends`,
+    attackLog: (atk, def, skill, dmg, label, hp) => `⚔️ ${atk} → ${def} ${skill}: ${dmg} damage${label} [HP left:${hp}]`,
+    damageBonus: (pct) => ` (damage taken +${pct}%)`,
+    comboDodge: (name, pct) => `💨 ${name} dodges the combo! Damage taken +${pct}% for 3 turns`,
+    carryOver: (name) => `(→ carried over to ${name})`,
+    comboHit: (dmg, carry, name, hp) => `   └ Combo! ${dmg} extra damage ${carry} [${name} HP:${hp}]`,
+    slowEffect: (name, down, agi) => `   └ ${name}'s agility -${down}! (${agi}) lasts for 2 attacks`,
+    breakthroughEffect: (name, atkDown, defDown) => `   └ ${name}'s attack rage -${atkDown}, defense rage -${defDown}!`,
+    quakeEffect: (pct) => `   └ Earthshaking Quake! ${pct}% damage attack`,
+    benchDamage: (name, dmg, hp) => `   └ Bench [${name}] takes ${dmg} damage [HP left:${hp}]`,
+    lacerateEffect: (name, pct) => `   └ Lacerate! ${name} bleeds ${pct}% max HP before 3 attacks`,
+    drainEffect: (name, heal, hp) => `   └ Life Drain! ${name} recovers HP +${heal} [HP left:${hp}]`,
+    tormentStart: (name, pct) => `[${entity('skill_torment')}] ${name} activates! Both sides take +${pct}% damage permanently`,
+    heavyWoundStart: (name) => `[${entity('skill_heavy_wound')}] ${name}: ready to dodge the first attack`,
+    attackTalentStart: (name) => `[${entity('skill_attack_talent')}] ${name}: attack rage +3/action`,
+    waverStart: (name) => `[${entity('skill_waver')}] ${name}: first 3 attacks -10%, next 3 attacks +15%`,
+    winRate: (team, pct, name) => `${team} win rate: <span>${pct}%</span> (${name})`,
+    judgement: (team, wins, n) => `Result: <span style="color:var(--gold2);font-weight:700">${team} is favored (${wins}/${n} wins)</span>`,
+    hpRow: (team, min, avg, max, surv) => `${team} winning remaining HP: min <span>${min}</span> / avg <span>${avg}</span> / max <span>${max}</span> avg survivors <span>${surv}</span>`,
+    statLine: (min, avg, max, extra) => `min ${min} / avg ${avg} / max ${max}${extra}`,
+    noKong: 'None',
+    noLv61: 'None (Lv61 did not survive)',
+    lv100Hp: '🔍 Lv100 HP when facing Lv61:',
+    lv61FinalHp: '🟢 Lv61 final HP (when Team A wins and survives):',
+    casesUnder: (count, hp) => ` (${count} cases at or under ${hp} HP)`,
+    casesUnderTotal: (under, hp, total) => ` (${under} cases at or under ${hp} HP, out of ${total})`,
+  },
+  ru: {
+    language: 'Язык',
+    appTitle: 'Симулятор битвы зверей',
+    subtitle: 'Savage Survival: Roar of Dinosaurs | Прогноз боя',
+    rageFormula: 'Ярость: воля × 0.2778 (расчет для каждого бойца)',
+    teamAOwn: 'Команда A (вы)',
+    teamBEnemy: 'Команда B (соперник)',
+    startBattle: 'Начать бой',
+    monteButton: '1000 симуляций',
+    showConfig: 'Проверить настройки',
+    rage: 'Ярость',
+    placeholder: 'Нажмите «Начать бой», чтобы увидеть журнал',
+    monteTitle: 'Результат Монте-Карло (1000 запусков)',
+    none: '── Нет ──',
+    ownTeam: 'Ваша команда',
+    previousEnemies: 'Прошлые соперники',
+    skillAdjust: 'Настройка навыков',
+    chooseCharacter: 'Выберите персонажа',
+    noAdjustments: 'Нет настраиваемых параметров',
+    unavailable: 'Нельзя настроить',
+    baseStats: 'Базовые параметры',
+    startHp: 'Начальное HP (для входа в бой; пусто = полное HP)',
+    fullHp: 'Полное HP',
+    example: 'Пример',
+    attackRage: 'Ярость атаки:',
+    defenseRage: 'Ярость защиты:',
+    attackShort: 'Атк',
+    defenseShort: 'Защ',
+    teamA: 'Команда A',
+    teamB: 'Команда B',
+    unselected: 'Не выбрано',
+    cost: 'Стоимость',
+    rageGainShort: 'Ярость +',
+    perAction: '/ход',
+    needTeams: 'Добавьте минимум одного персонажа в обе команды.',
+    normalAttack: 'Обычная атака',
+    battleStart: '━━━━━ Старт боя 6v6 ━━━━━',
+    matchup: (a, b) => `── ${a} vs ${b} ──`,
+    action: (name) => `── Ход: ${name} ──`,
+    defeated: (name) => `💀 ${name} побежден!`,
+    joins: (team, name, hp) => `⚡ ${team}: ${name} вступает! (HP:${hp})`,
+    timeUp: (team) => `⏱️ Время вышло! ${team} побеждает по остаточному HP!`,
+    teamWin: (team, aliveA, aliveB) => `🏆 Победа: ${team}! (A живы:${aliveA} / B живы:${aliveB})`,
+    teamList: (team, names) => `${team}: ${names}`,
+    undying: (name, hp) => `💪 ${name}: [${entity('skill_undying')}] сработал! Переживает смертельный удар и возвращается с HP ${hp}!`,
+    hardenUse: (name, skill, pct) => `🛡️ ${name} активирует [${skill}]! Входящий урон -${pct}%`,
+    thornsUse: (name, skill, pct) => `🌵 ${name} активирует [${skill}]! Отразит ${pct}% следующего урона`,
+    purifyUse: (name, skill, stacks, heal) => `✨ ${name} активирует [${skill}]! Снимает ${stacks} стаков дебаффов, HP +${heal}`,
+    skillUse: (name, skill) => `🔥 ${name} активирует [${skill}]!`,
+    dodgeNormal: (def, atk) => `⚠️ ${def} готов уклониться, поэтому ${atk} выбирает обычную атаку`,
+    hardenTriggered: (name) => `🛡️ ${name}: ${entity('skill_harden')} сработал! Урон снижен`,
+    dodge: (name, pct) => `💨 ${name} уклоняется! Входящий урон +${pct}% на 3 хода`,
+    bleedBefore: (name, dmg, hp) => `🩸 ${name} истекает кровью перед атакой! ${dmg} урона [HP:${hp}]`,
+    thornsReflect: (def, atk, dmg, hp) => `🌵 ${def}: ${entity('skill_thorns')}! ${atk} получает ${dmg} отраженного урона [HP ${atk}: ${hp}]`,
+    speedDebuffEnd: (name) => `✨ Дебафф скорости ${name} снят`,
+    attackLog: (atk, def, skill, dmg, label, hp) => `⚔️ ${atk} → ${def} ${skill}: ${dmg} урона${label} [HP:${hp}]`,
+    damageBonus: (pct) => ` (входящий урон +${pct}%)`,
+    comboDodge: (name, pct) => `💨 ${name} уклоняется от комбо! Входящий урон +${pct}% на 3 хода`,
+    carryOver: (name) => `(→ перенос на ${name})`,
+    comboHit: (dmg, carry, name, hp) => `   └ Комбо! ${dmg} доп. урона ${carry} [HP ${name}: ${hp}]`,
+    slowEffect: (name, down, agi) => `   └ Ловкость ${name} -${down}! (${agi}) длится 2 атаки`,
+    breakthroughEffect: (name, atkDown, defDown) => `   └ Ярость атаки ${name} -${atkDown}, ярость защиты -${defDown}!`,
+    quakeEffect: (pct) => `   └ Землетрясение! Атака с ${pct}% урона`,
+    benchDamage: (name, dmg, hp) => `   └ Запасной [${name}] получает ${dmg} урона [HP:${hp}]`,
+    lacerateEffect: (name, pct) => `   └ Рваная рана! ${name} теряет ${pct}% макс. HP перед 3 атаками`,
+    drainEffect: (name, heal, hp) => `   └ Вампиризм! ${name} восстанавливает HP +${heal} [HP:${hp}]`,
+    tormentStart: (name, pct) => `[${entity('skill_torment')}] ${name} активирует! Обе стороны получают +${pct}% урона навсегда`,
+    heavyWoundStart: (name) => `[${entity('skill_heavy_wound')}] ${name}: готов уклониться от первой атаки`,
+    attackTalentStart: (name) => `[${entity('skill_attack_talent')}] ${name}: ярость атаки +3/ход`,
+    waverStart: (name) => `[${entity('skill_waver')}] ${name}: первые 3 атаки -10%, следующие 3 +15%`,
+    winRate: (team, pct, name) => `Шанс победы ${team}: <span>${pct}%</span> (${name})`,
+    judgement: (team, wins, n) => `Итог: <span style="color:var(--gold2);font-weight:700">${team} имеет преимущество (${wins}/${n} побед)</span>`,
+    hpRow: (team, min, avg, max, surv) => `${team}, остаток HP при победе: мин <span>${min}</span> / ср <span>${avg}</span> / макс <span>${max}</span>, среднее выживших <span>${surv}</span>`,
+    statLine: (min, avg, max, extra) => `мин ${min} / ср ${avg} / макс ${max}${extra}`,
+    noKong: 'Нет',
+    noLv61: 'Нет (Lv61 не выжил)',
+    lv100Hp: '🔍 HP Lv100 в начале боя против Lv61:',
+    lv61FinalHp: '🟢 Финальное HP Lv61 (победа Team A и выживание):',
+    casesUnder: (count, hp) => ` (${count} случаев с HP ${hp} или ниже)`,
+    casesUnderTotal: (under, hp, total) => ` (${under} случаев с HP ${hp} или ниже, из ${total})`,
+  },
+  zh: {
+    language: '语言',
+    appTitle: '猛兽战斗模拟器',
+    subtitle: 'Savage Survival: 恐龙咆哮 | 战斗预测工具',
+    rageFormula: '怒气获取量: 意志 × 0.2778（按角色自动计算）',
+    teamAOwn: '队伍A（我方）',
+    teamBEnemy: '队伍B（对手）',
+    startBattle: '开始战斗',
+    monteButton: '模拟1000次',
+    showConfig: '查看当前设置',
+    rage: '怒气',
+    placeholder: '点击“开始战斗”后显示战斗日志',
+    monteTitle: '蒙特卡洛模拟结果（1000次）',
+    none: '── 无 ──',
+    ownTeam: '我方队伍',
+    previousEnemies: '之前的对手',
+    skillAdjust: '技能调整',
+    chooseCharacter: '请选择角色',
+    noAdjustments: '没有可调整项目',
+    unavailable: '不可调整',
+    baseStats: '基础属性',
+    startHp: '初始HP（中途参战用，留空=满HP）',
+    fullHp: '满HP',
+    example: '例',
+    attackRage: '攻击怒气:',
+    defenseRage: '防御怒气:',
+    attackShort: '攻',
+    defenseShort: '防',
+    teamA: '队伍A',
+    teamB: '队伍B',
+    unselected: '未选择',
+    cost: '消耗',
+    rageGainShort: '怒气+',
+    perAction: '/次',
+    needTeams: '两队都至少设置1名角色。',
+    normalAttack: '普通攻击',
+    battleStart: '━━━━━ 6v6 战斗开始 ━━━━━',
+    matchup: (a, b) => `── ${a} vs ${b} ──`,
+    action: (name) => `── ${name}的行动 ──`,
+    defeated: (name) => `💀 ${name} 被击败！`,
+    joins: (team, name, hp) => `⚡ ${team}: ${name} 参战！ (HP:${hp})`,
+    timeUp: (team) => `⏱️ 时间到！${team}以剩余HP获胜！`,
+    teamWin: (team, aliveA, aliveB) => `🏆 ${team}胜利！（A存活:${aliveA} / B存活:${aliveB}）`,
+    teamList: (team, names) => `${team}: ${names}`,
+    undying: (name, hp) => `💪 ${name}的【${entity('skill_undying')}】发动！承受致命伤害并以HP${hp}复活！`,
+    hardenUse: (name, skill, pct) => `🛡️ ${name}发动【${skill}】！受到伤害-${pct}%`,
+    thornsUse: (name, skill, pct) => `🌵 ${name}发动【${skill}】！准备反射下次伤害的${pct}%`,
+    purifyUse: (name, skill, stacks, heal) => `✨ ${name}发动【${skill}】！移除${stacks}层减益 HP+${heal}`,
+    skillUse: (name, skill) => `🔥 ${name}发动【${skill}】！`,
+    dodgeNormal: (def, atk) => `⚠️ ${def}处于闪避准备，${atk}选择普通攻击`,
+    hardenTriggered: (name) => `🛡️ ${name}的${entity('skill_harden')}发动！伤害降低`,
+    dodge: (name, pct) => `💨 ${name}闪避攻击！之后3回合受到伤害+${pct}%`,
+    bleedBefore: (name, dmg, hp) => `🩸 ${name}攻击前出血！${dmg}伤害 [剩余HP:${hp}]`,
+    thornsReflect: (def, atk, dmg, hp) => `🌵 ${def}的${entity('skill_thorns')}！对${atk}反射${dmg}伤害 [${atk}剩余HP:${hp}]`,
+    speedDebuffEnd: (name) => `✨ ${name}的速度减益解除`,
+    attackLog: (atk, def, skill, dmg, label, hp) => `⚔️ ${atk} → ${def} ${skill}: ${dmg}伤害${label} [剩余HP:${hp}]`,
+    damageBonus: (pct) => ` (受到伤害+${pct}%)`,
+    comboDodge: (name, pct) => `💨 ${name}闪避连击！之后3回合受到伤害+${pct}%`,
+    carryOver: (name) => `（→转移到${name}）`,
+    comboHit: (dmg, carry, name, hp) => `   └ 连击！${dmg}追加伤害${carry} [${name}剩余HP:${hp}]`,
+    slowEffect: (name, down, agi) => `   └ ${name}敏捷-${down}！(${agi}) 持续2次攻击`,
+    breakthroughEffect: (name, atkDown, defDown) => `   └ ${name}攻击怒气-${atkDown}・防御怒气-${defDown}！`,
+    quakeEffect: (pct) => `   └ 大地震撼！${pct}%伤害攻击`,
+    benchDamage: (name, dmg, hp) => `   └ 后备【${name}】受到${dmg}伤害 [剩余HP:${hp}]`,
+    lacerateEffect: (name, pct) => `   └ 伤口裂伤！${name}在3次攻击前流失最大HP${pct}%`,
+    drainEffect: (name, heal, hp) => `   └ 吸血！${name}恢复HP+${heal} [剩余HP:${hp}]`,
+    tormentStart: (name, pct) => `【${entity('skill_torment')}】${name}发动！双方受到伤害+${pct}%（永久）`,
+    heavyWoundStart: (name) => `【${entity('skill_heavy_wound')}】${name}: 准备闪避首次攻击`,
+    attackTalentStart: (name) => `【${entity('skill_attack_talent')}】${name}: 攻击怒气+3/次`,
+    waverStart: (name) => `【${entity('skill_waver')}】${name}: 前3次攻击-10%，后3次+15%`,
+    winRate: (team, pct, name) => `${team}胜率: <span>${pct}%</span>（${name}）`,
+    judgement: (team, wins, n) => `判定: <span style="color:var(--gold2);font-weight:700">${team}占优（${wins}/${n}胜）</span>`,
+    hpRow: (team, min, avg, max, surv) => `${team}胜利时剩余HP合计: 最小 <span>${min}</span> / 平均 <span>${avg}</span> / 最大 <span>${max}</span>　平均存活 <span>${surv}</span>名`,
+    statLine: (min, avg, max, extra) => `最小 ${min} / 平均 ${avg} / 最大 ${max}${extra}`,
+    noKong: '无',
+    noLv61: '无（Lv61未存活）',
+    lv100Hp: '🔍 Lv100与Lv61开始对战时HP:',
+    lv61FinalHp: '🟢 Lv61最终HP（队伍A胜利且存活时）:',
+    casesUnder: (count, hp) => `（${count}件为${hp}HP以下）`,
+    casesUnderTotal: (under, hp, total) => `（${under}件为${hp}HP以下・共${total}件）`,
+  }
+};
+
+const ENTITY_I18N = {
+  kong: { en: 'Mighty Kong', ru: 'Могучий Конг', zh: '怪力金刚' },
+  dark_rex: { en: 'Dark Rex', ru: 'Темный Рекс', zh: '暗黑雷克斯' },
+  young_rex: { en: 'Young Rex', ru: 'Молодой Рекс', zh: '幼年雷克斯' },
+  ice_ptera: { en: 'Icewing Ptera', ru: 'Ледокрылый Птера', zh: '冰翼翼龙' },
+  golden_rex: { en: 'Golden Rex', ru: 'Золотой Рекс', zh: '黄金雷克斯' },
+  kibarra_rex_50: { en: 'Yellowspike Rex', ru: 'Желтошипый Рекс', zh: '黄棘雷克斯' },
+  kibarra_rex: { en: 'Yellowspike Rex', ru: 'Желтошипый Рекс', zh: '黄棘雷克斯' },
+  mini_rex: { en: 'Mini Rex', ru: 'Мини Рекс', zh: '迷你雷克斯' },
+  tyrannorex: { en: 'Tyranno Rex', ru: 'Тиранно Рекс', zh: '暴王雷克斯' },
+  white_saber: { en: 'White Saber', ru: 'Белый Саблезуб', zh: '白色剑齿兽' },
+  k_kong: { en: 'Mighty Kong (K)', ru: 'Могучий Конг (K)', zh: '怪力金刚(K)' },
+  k_kong_100: { en: 'Mighty Kong (Opponent)', ru: 'Могучий Конг (соперник)', zh: '怪力金刚【对手】' },
+  k_tyrex: { en: 'Tyranno Rex (K)', ru: 'Тиранно Рекс (K)', zh: '暴王雷克斯(K)' },
+  gigant: { en: 'Gigant Kingdrake', ru: 'Гигантский король-ящер', zh: '巨王龙' },
+  mineral_rex: { en: 'Mineral Rex', ru: 'Минеральный Рекс', zh: '矿石雷克斯' },
+  skill_combo: { ja: '攻撃-連撃', en: 'Attack - Combo', ru: 'Атака - Комбо', zh: '攻击-连击' },
+  skill_wild: { ja: 'パッシブ-野性', en: 'Passive - Wild', ru: 'Пассив - Дикость', zh: '被动-野性' },
+  skill_wild_weak: { ja: 'パッシブ-野性(弱)', en: 'Passive - Wild (Weak)', ru: 'Пассив - Дикость (слаб.)', zh: '被动-野性(弱)' },
+  skill_heavy_wound: { ja: '戦吼-重傷', en: 'Battlecry - Heavy Wound', ru: 'Боевой клич - Тяжелая рана', zh: '战吼-重伤' },
+  skill_slow: { ja: '攻撃-減速', en: 'Attack - Slow', ru: 'Атака - Замедление', zh: '攻击-减速' },
+  skill_harden: { ja: '防御-硬化皮膚', en: 'Defense - Hardened Skin', ru: 'Защита - Твердая кожа', zh: '防御-硬化皮肤' },
+  skill_waver: { ja: '戦吼-動揺', en: 'Battlecry - Waver', ru: 'Боевой клич - Колебание', zh: '战吼-动摇' },
+  skill_breakthrough: { ja: '攻撃-突破', en: 'Attack - Breakthrough', ru: 'Атака - Прорыв', zh: '攻击-突破' },
+  skill_undying: { ja: 'パッシブ-不屈の魂', en: 'Passive - Undying Soul', ru: 'Пассив - Несгибаемая душа', zh: '被动-不屈之魂' },
+  skill_torment: { ja: '戦吼-折磨', en: 'Battlecry - Torment', ru: 'Боевой клич - Мучение', zh: '战吼-折磨' },
+  skill_quake: { ja: '攻撃-大地震撼', en: 'Attack - Earthshaking Quake', ru: 'Атака - Сотрясение земли', zh: '攻击-大地震撼' },
+  skill_lacerate: { ja: '攻撃-傷口裂傷', en: 'Attack - Lacerate', ru: 'Атака - Рваная рана', zh: '攻击-伤口裂伤' },
+  skill_thorns: { ja: '防御-荊棘外殻', en: 'Defense - Thorn Shell', ru: 'Защита - Шипастый панцирь', zh: '防御-荆棘外壳' },
+  skill_drain: { ja: '攻撃-吸血', en: 'Attack - Life Drain', ru: 'Атака - Вампиризм', zh: '攻击-吸血' },
+  skill_purify: { ja: '防御-浄化術', en: 'Defense - Purify', ru: 'Защита - Очищение', zh: '防御-净化术' },
+  skill_hunter_mark: { ja: 'パッシブ-狩人の印', en: "Passive - Hunter's Mark", ru: 'Пассив - Метка охотника', zh: '被动-猎人印记' },
+  skill_attack_talent: { ja: '戦吼-攻撃タレント', en: 'Battlecry - Attack Talent', ru: 'Боевой клич - Талант атаки', zh: '战吼-攻击天赋' },
+  param_combo: { ja: '2回目倍率', en: 'Second hit ratio', ru: 'Множитель 2-го удара', zh: '第二击倍率' },
+  param_wild: { ja: 'HP10%毎ATK増', en: 'ATK per 10% HP lost', ru: 'ATK за каждые 10% HP', zh: '每损失10%HP攻击提升' },
+  param_harden: { ja: '被ダメ軽減', en: 'Damage reduction', ru: 'Снижение урона', zh: '受伤降低' },
+  param_drain: { ja: 'HP回復率', en: 'HP recovery rate', ru: 'Доля лечения HP', zh: 'HP恢复率' },
+  param_slow: { ja: 'AGI減少', en: 'AGI decrease', ru: 'Снижение AGI', zh: '敏捷降低' },
+  param_quake: { ja: 'ダメージ倍率', en: 'Damage ratio', ru: 'Множитель урона', zh: '伤害倍率' },
+  param_bench: { ja: '控えダメージ率', en: 'Bench damage ratio', ru: 'Урон запасным', zh: '后备伤害率' },
+  param_lacerate: { ja: '出血率(最大HP)', en: 'Bleed rate (max HP)', ru: 'Кровотечение (макс. HP)', zh: '出血率(最大HP)' },
+  param_thorns: { ja: '反射率', en: 'Reflect rate', ru: 'Доля отражения', zh: '反射率' },
+  param_heavy_wound: { ja: '被ダメ増加', en: 'Damage taken increase', ru: 'Увеличение входящего урона', zh: '受伤增加' },
+  param_torment: { ja: '双方被ダメ増', en: 'Both damage taken increase', ru: 'Урон по обеим сторонам', zh: '双方受伤增加' },
+  param_breakthrough: { ja: 'レイジ減少量', en: 'Rage reduction', ru: 'Снижение ярости', zh: '怒气减少量' },
+  param_hunter_mark: { ja: '+ダメ/スタック', en: '+damage/stack', ru: '+урон/стак', zh: '+伤害/层' },
+  param_attack_talent: { ja: '攻撃レイジ+', en: 'Attack rage +', ru: 'Ярость атаки +', zh: '攻击怒气+' },
+  param_purify: { ja: 'HP回復/スタック', en: 'HP recovery/stack', ru: 'HP за стак', zh: 'HP恢复/层' },
+  param_undying: { ja: 'HP回復率(致死)', en: 'HP recovery on lethal', ru: 'HP при смертельном ударе', zh: '致命时HP恢复率' },
+  param_waver_late: { ja: '後半3回被ダメ増', en: 'Last 3 attacks damage up', ru: 'Последние 3 атаки: урон +', zh: '后3次受伤增加' },
+  param_waver_early: { ja: '前半3回被ダメ減', en: 'First 3 attacks damage down', ru: 'Первые 3 атаки: урон -', zh: '前3次受伤降低' },
+};
+
+let currentLang = 'ja';
+
+function t(key, ...args) {
+  const value = I18N[currentLang]?.[key] ?? I18N.ja[key] ?? key;
+  return typeof value === 'function' ? value(...args) : value;
+}
+
+function entity(key, fallback) {
+  return ENTITY_I18N[key]?.[currentLang] ?? ENTITY_I18N[key]?.ja ?? fallback ?? key;
+}
+
+function charName(id) {
+  return entity(id, CHARS[id]?.name ?? id);
+}
+
+function fighterName(fighter) {
+  return charName(fighter.data.id);
+}
+
+function skillName(skill) {
+  return entity('skill_' + skill.effect, skill.name);
+}
+
+function optionCharName(id) {
+  return charName(id)
+    .replace(/\s*\(K\)$/i, '')
+    .replace(/\s*\(Opponent\)$/i, '')
+    .replace(/\s*\(соперник\)$/i, '')
+    .replace(/（K）$/i, '')
+    .replace(/【相手】$/, '')
+    .replace(/（对手）$/, '')
+    .trim();
+}
+
+function paramLabel(key, fallback) {
+  return entity(key, fallback);
+}
+
+function applyI18n() {
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  const select = document.getElementById('languageSelect');
+  if (select) select.value = currentLang;
+}
+
+function refreshLanguage() {
+  applyI18n();
+  rebuildTeamBuilder();
+  updateAllSlotAgis();
+  document.getElementById('logArea').innerHTML = `<div class="placeholder">${t('placeholder')}</div>`;
+  document.getElementById('monteResult').style.display = 'none';
+  if (document.getElementById('configSummary').style.display === 'flex') {
+    document.getElementById('configSummary').style.display = 'none';
+    toggleConfigSummary();
+  }
+}
+
+function setLanguage(lang) {
+  currentLang = I18N[lang] ? lang : 'ja';
+  try { localStorage.setItem('battleSim_LANG', currentLang); } catch(e) {}
+  refreshLanguage();
+}
+
+// ===== スキルパラメーター上書きシステム =====
+const OVERRIDES = {};
+const SLOT_STAT = { A: {}, B: {} };
+
+function getParam(charId, effect, key, fallback) {
+  const k = `${charId}.${effect}.${key}`;
+  return OVERRIDES[k] !== undefined ? OVERRIDES[k] : fallback;
+}
+function setParam(charId, effect, key, val) {
+  OVERRIDES[`${charId}.${effect}.${key}`] = val;
+  saveToStorage();
+}
+function saveToStorage() {
+  try {
+    localStorage.setItem('battleSim_OVERRIDES', JSON.stringify(OVERRIDES));
+    localStorage.setItem('battleSim_SLOT_STAT', JSON.stringify(SLOT_STAT));
+    localStorage.setItem('battleSim_TEAM_SEL', JSON.stringify(TEAM_SEL));
+    localStorage.setItem('battleSim_LANG', currentLang);
+  } catch(e) {}
+}
+function loadFromStorage() {
+  try {
+    const lang = localStorage.getItem('battleSim_LANG');
+    if (lang && I18N[lang]) currentLang = lang;
+    const ov = localStorage.getItem('battleSim_OVERRIDES');
+    if (ov) Object.assign(OVERRIDES, JSON.parse(ov));
+    const ss = localStorage.getItem('battleSim_SLOT_STAT');
+    if (ss) { const d = JSON.parse(ss); Object.assign(SLOT_STAT.A, d.A||{}); Object.assign(SLOT_STAT.B, d.B||{}); }
+    const ts = localStorage.getItem('battleSim_TEAM_SEL');
+    if (ts) { const d = JSON.parse(ts); Object.assign(TEAM_SEL.A, d.A); Object.assign(TEAM_SEL.B, d.B); }
+  } catch(e) {}
+}
+function setSlotStat(side, idx, key, val) {
+  if (!SLOT_STAT[side][idx]) SLOT_STAT[side][idx] = {};
+  if (val === null || val === undefined) {
+    delete SLOT_STAT[side][idx][key];
+  } else {
+    SLOT_STAT[side][idx][key] = val;
+  }
+  if (key === 'agi') updateSlotAgi(side, idx);
+  saveToStorage();
+}
+
+// [ラベル, %表示か, デフォルト値]
+const PARAM_INFO = {
+  combo:         { param: ['param_combo',         true,  0.60] },
+  wild:          { param: ['param_wild',          true,  0.05] },
+  wild_weak:     { param: ['param_wild',          true,  0.03] },
+  harden:        { param: ['param_harden',        true,  0.20] },
+  drain:         { param: ['param_drain',         true,  0.40] },
+  slow:          { param: ['param_slow',          true,  0.12] },
+  quake:         { param: ['param_quake',         true,  1.40], param2: ['param_bench', true, 0] },
+  lacerate:      { param: ['param_lacerate',      true,  0.045]},
+  thorns:        { param: ['param_thorns',        true,  0.20] },
+  heavy_wound:   { param: ['param_heavy_wound',   true,  0.20] },
+  torment:       { param: ['param_torment',       true,  0.25] },
+  breakthrough:  { param: ['param_breakthrough',  false, 13  ] },
+  hunter_mark:   { param: ['param_hunter_mark',   false, 9   ] },
+  attack_talent: { param: ['param_attack_talent', false, 3   ] },
+  purify:        { param: ['param_purify',        false, 5   ] },
+  undying:       { param: ['param_undying',       true,  0.05] },
+  waver:         { param: ['param_waver_late',    true, 0.15], param2: ['param_waver_early', true, 0.10] },
+};
+
+function toggleSkillEditor(side) {
+  const el = document.getElementById('skillEditor' + side);
+  if (el.style.display === 'none') {
+    renderSkillEditor(side);
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function renderSkillEditor(side) {
+  const charId = document.getElementById('select' + side).value;
+  const char = CHARS[charId];
+  const container = document.getElementById('skillEditor' + side);
+  let html = '';
+
+  char.skills.forEach(skill => {
+    const info = PARAM_INFO[skill.effect] || {};
+    const hasRage = skill.rageCost !== undefined;
+    const hasParam = skill.param !== undefined && info.param;
+    if (!hasRage && !hasParam) return;
+
+    html += `<div class="skill-edit-row">
+      <div class="skill-edit-name">${skillName(skill)}</div>
+      <div class="skill-edit-fields">`;
+
+    if (hasRage) {
+      const cur = getParam(charId, skill.effect, 'rageCost', skill.rageCost);
+      const rageLabel = skill.type === 'defense' ? t('defenseRage') : t('attackRage');
+      html += `<div class="skill-edit-field">
+        <span>${rageLabel}</span>
+        <input type="number" value="${cur}" min="0" max="100"
+          onchange="setParam('${charId}','${skill.effect}','rageCost',parseInt(this.value)||0)">
+      </div>`;
+    }
+
+    if (hasParam) {
+      const [label, isPercent] = info.param;
+      const raw = getParam(charId, skill.effect, 'param', skill.param);
+      const disp = isPercent ? Math.round(raw * 100) : raw;
+      const onChange = isPercent
+        ? `setParam('${charId}','${skill.effect}','param',parseFloat(this.value)/100)`
+        : `setParam('${charId}','${skill.effect}','param',parseFloat(this.value)||0)`;
+      html += `<div class="skill-edit-field">
+        <span>${paramLabel(label)}:</span>
+        <input type="number" value="${disp}" min="0" max="${isPercent?300:999}" step="1"
+          onchange="${onChange}">
+        ${isPercent ? '%' : ''}
+      </div>`;
+    }
+
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html || `<p style="color:var(--text-dim)">${t('noAdjustments')}</p>`;
+}
+
+// ===== キャラクターデータ =====
+const CHARS = {
+  // 自チーム
+  kong: {
+    id: 'kong', name: '怪力コング', lv: 75, stars: 3, team: 'mine',
+    dur: 720, atk: 360, agi: 359, will: 212,
+    skills: [
+      { name: '攻撃-連撃', type: 'attack', rageCost: 50, effect: 'combo', param: 0.80, desc: '追加攻撃(攻撃力80%)' },
+      { name: 'パッシブ-野性', type: 'passive', effect: 'wild', desc: 'HP10%毎に攻撃力+5%' },
+      { name: '戦吼-重傷', type: 'battlecry', effect: 'heavy_wound', param: 0.10, desc: '初回回避→被ダメ+10%(3T)' }
+    ]
+  },
+  dark_rex: {
+    id: 'dark_rex', name: '暗黒レックス', lv: 40, stars: 2, team: 'mine',
+    dur: 340, atk: 170, agi: 168, will: 114,
+    skills: [
+      { name: '攻撃-減速', type: 'attack', rageCost: 30, effect: 'slow', desc: '敵AGI-12%(2回攻撃)' },
+      { name: '防御-硬化皮膚', type: 'defense', rageCost: 20, effect: 'harden', param: 0.20, desc: '次被ダメ-20%' },
+      { name: '戦吼-動揺', type: 'battlecry', effect: 'waver', desc: '最初3攻撃-10%/次3+15%' }
+    ]
+  },
+  young_rex: {
+    id: 'young_rex', name: 'ヤングレックス', lv: 42, stars: 4, team: 'mine',
+    dur: 378, atk: 193, agi: 191, will: 156,
+    skills: [
+      { name: '攻撃-突破', type: 'attack', rageCost: 50, effect: 'breakthrough', desc: '敵レイジ-13' },
+      { name: 'パッシブ-野性', type: 'passive', effect: 'wild', desc: 'HP10%毎に攻撃力+5%' },
+      { name: '戦吼-重傷', type: 'battlecry', effect: 'heavy_wound', param: 0.10, desc: '初回回避→被ダメ+10%(3T)' }
+    ]
+  },
+  // 相手チーム
+  ice_ptera: {
+    id: 'ice_ptera', name: '氷翼プテラ', lv: 72, stars: 1, team: 'enemy',
+    dur: 388, atk: 194, agi: 194, will: 132,
+    skills: [
+      { name: '攻撃-減速', type: 'attack', rageCost: 50, effect: 'slow', param: 0.24, desc: '敵AGI-24%(2回攻撃)' },
+      { name: 'パッシブ-不屈の魂', type: 'passive', effect: 'undying', param: 0.15, desc: '一度だけ致死無効化+HP15%回復' }
+    ]
+  },
+  golden_rex: {
+    id: 'golden_rex', name: '黄金レックス', lv: 50, stars: 4, team: 'enemy',
+    dur: 539, atk: 270, agi: 268, will: 167,
+    skills: [
+      { name: '攻撃-突破', type: 'attack', rageCost: 30, effect: 'breakthrough', param: 8, desc: '敵レイジ-8' },
+      { name: '防御-硬化皮膚', type: 'defense', rageCost: 30, effect: 'harden', param: 0.25, desc: '次被ダメ-25%' },
+      { name: '戦吼-折磨', type: 'battlecry', effect: 'torment', param: 0.20, desc: '双方被ダメ+20%' }
+    ]
+  },
+  kibarra_rex_50: {
+    id: 'kibarra_rex_50', name: '黄棘レックス', lv: 40, stars: 4, team: 'enemy',
+    dur: 373, atk: 189, agi: 187, will: 155,
+    skills: [
+      { name: '攻撃-大地震撼', type: 'attack', rageCost: 40, effect: 'quake', param: 1.40, param2: 0.15, desc: '140%ダメージ攻撃（控え15%）' },
+      { name: '防御-硬化皮膚', type: 'defense', rageCost: 40, effect: 'harden', param: 0.30, desc: '次被ダメ-30%' },
+      { name: '戦吼-折磨', type: 'battlecry', effect: 'torment', param: 0.25, desc: '双方被ダメ+25%' }
+    ]
+  },
+  kibarra_rex: {
+    id: 'kibarra_rex', name: '黄棘レックス', lv: 66, stars: 3, team: 'enemy',
+    dur: 545, atk: 188, agi: 186, will: 103,
+    skills: [
+      { name: '攻撃-大地震撼', type: 'attack', rageCost: 40, effect: 'quake', param: 1.40, desc: '140%ダメージ攻撃' },
+      { name: '防御-硬化皮膚', type: 'defense', rageCost: 40, effect: 'harden', param: 0.30, desc: '次被ダメ-30%' },
+      { name: '戦吼-折磨', type: 'battlecry', effect: 'torment', param: 0.25, desc: '双方被ダメ+25%' }
+    ]
+  },
+  mini_rex: {
+    id: 'mini_rex', name: 'ミニレックス', lv: 66, stars: 3, team: 'enemy',
+    dur: 545, atk: 188, agi: 186, will: 103,
+    skills: [
+      { name: '攻撃-傷口裂傷', type: 'attack', rageCost: 40, effect: 'lacerate', param: 0.045, desc: '敵が攻撃前に最大HP4.5%出血(3回)' },
+      { name: '防御-荊棘外殻', type: 'defense', rageCost: 40, effect: 'thorns', param: 0.20, desc: '被ダメの20%反射' }
+    ]
+  },
+  tyrannorex: {
+    id: 'tyrannorex', name: '暴王レックス', lv: 66, stars: 5, team: 'enemy',
+    dur: 493, atk: 248, agi: 247, will: 170,
+    skills: [
+      { name: '攻撃-吸血', type: 'attack', rageCost: 50, effect: 'drain', param: 0.40, desc: '与ダメの40%HP回復' },
+      { name: '防御-浄化術', type: 'defense', rageCost: 40, effect: 'purify', param: 5, desc: 'デバフ2スタック除去+5HP/スタック' },
+      { name: 'パッシブ-野性(弱)', type: 'passive', effect: 'wild_weak', desc: 'HP10%毎に攻撃力+3%' }
+    ]
+  },
+  white_saber: {
+    id: 'white_saber', name: 'ホワイトサーベル', lv: 55, stars: 3, team: 'enemy',
+    dur: 558, atk: 279, agi: 280, will: 175,
+    skills: [
+      { name: '攻撃-連撃', type: 'attack', rageCost: 50, effect: 'combo', param: 0.80, desc: '追加攻撃(攻撃力80%)' },
+      { name: 'パッシブ-狩人の印', type: 'passive', effect: 'hunter_mark', desc: '攻撃ごとに+9ダメ累積(最大+90)' },
+      { name: '戦吼-攻撃タレント', type: 'battlecry', effect: 'attack_talent', desc: '攻撃レイジ獲得+3/回' }
+    ]
+  },
+  // Karabiber チーム
+  k_kong: {
+    id: 'k_kong', name: '怪力コング(K)', lv: 65, stars: 3, team: 'enemy',
+    dur: 520, atk: 260, agi: 259, will: 162,
+    skills: [
+      { name: '攻撃-連撃', type: 'attack', rageCost: 40, effect: 'combo', param: 0.70, desc: '追加攻撃(攻撃力70%)' },
+      { name: 'パッシブ-野性', type: 'passive', effect: 'wild', param: 0.04, desc: 'HP10%毎に攻撃力+4%' },
+      { name: '戦吼-重傷', type: 'battlecry', effect: 'heavy_wound', param: 0.15, desc: '初回回避→被ダメ+15%(3T)' }
+    ]
+  },
+  k_kong_100: {
+    id: 'k_kong_100', name: '怪力コング【相手】', lv: 100, stars: 5, team: 'enemy',
+    dur: 820, atk: 410, agi: 409, will: 237,
+    skills: [
+      { name: '攻撃-連撃', type: 'attack', rageCost: 50, effect: 'combo', param: 0.80, desc: '追加攻撃(攻撃力80%)' },
+      { name: 'パッシブ-野性', type: 'passive', effect: 'wild', desc: 'HP10%毎に攻撃力+5%' },
+      { name: '戦吼-重傷', type: 'battlecry', effect: 'heavy_wound', param: 0.10, desc: '初回回避→被ダメ+10%(3T)' }
+    ]
+  },
+  k_tyrex: {
+    id: 'k_tyrex', name: '暴王レックス(K)', lv: 60, stars: 2, team: 'enemy',
+    dur: 418, atk: 210, agi: 210, will: 138,
+    skills: [
+      { name: '攻撃-吸血', type: 'attack', rageCost: 40, effect: 'drain', param: 0.30, desc: '与ダメの30%HP回復' },
+      { name: '防御-浄化術', type: 'defense', rageCost: 40, effect: 'purify', param: 5, desc: 'デバフ2スタック除去+5HP/スタック' },
+      { name: 'パッシブ-野性', type: 'passive', effect: 'wild', param: 0.04, desc: 'HP10%毎に攻撃力+4%' }
+    ]
+  },
+  gigant: {
+    id: 'gigant', name: 'ギガント王竜', lv: 52, stars: 2, team: 'enemy',
+    dur: 402, atk: 201, agi: 201, will: 124,
+    skills: [
+      { name: '攻撃-突破', type: 'attack', rageCost: 30, effect: 'breakthrough', param: 8, desc: '敵レイジ-8' },
+      { name: '防御-硬化皮膚', type: 'defense', rageCost: 30, effect: 'harden', param: 0.25, desc: '次被ダメ-25%' },
+      { name: 'パッシブ-不屈の魂', type: 'passive', effect: 'undying', param: 0.05, desc: '一度だけ致死無効化+HP5%回復' }
+    ]
+  },
+  mineral_rex: {
+    id: 'mineral_rex', name: '鉱石レックス', lv: 56, stars: 4, team: 'enemy',
+    dur: 581, atk: 288, agi: 286, will: 172,
+    skills: [
+      { name: '攻撃-大地震撼', type: 'attack', rageCost: 50, effect: 'quake', param: 1.50, param2: 0.15, desc: '150%ダメージ攻撃（控え15%）' },
+      { name: '防御-硬化皮膚', type: 'defense', rageCost: 50, effect: 'harden', param: 0.35, desc: '次被ダメ-35%' },
+      { name: 'パッシブ-不屈の魂', type: 'passive', effect: 'undying', param: 0.15, desc: '一度だけ致死無効化+HP15%回復' }
+    ]
+  }
+};
+
+// ===== バトルステート =====
+class Fighter {
+  constructor(data) {
+    this.data = data;
+    this.name = data.name;
+    this.maxHP = data.dur * 4;
+    this.hp = (data.hp_start != null && data.hp_start > 0) ? Math.min(data.hp_start, this.maxHP) : this.maxHP;
+    this.baseATK = data.atk;
+    this.agi = data.agi;
+    this.will = data.will;
+    this.atkRage = 0;   // 攻撃レイジ（自分が攻撃するたびに溜まる）
+    this.defRage = 0;   // 防御レイジ（被弾するたびに溜まる）
+    this.maxRage = 100;
+
+    // 状態
+    this.firstDodge = false;
+    this.damageBonusTurns = 0;
+    this.damageBonusPercent = 0;
+    this.hardenReady = false;
+    this.attackCount = 0;
+    this.agiDebuffAttacksLeft = 0;
+    this.agiDebuffAmount = 0;
+    this.attackRageBonus = 0;
+    this.hunterMarkBonus = 0;
+    this.lacerateTurns = 0;
+    this.lacerateParam = 0;
+    this.thornsReady = false;
+    this.thornsParam = 0;
+    this.tormentBonus = 0; // 折磨による被ダメ増加率（永続）
+    this.undyingUsed = false;
+    this.suppressNextSkill = false; // 交代後の最初の行動はスキル抑制
+    this.suppressRageGain = false;  // 交代後の最初の行動はレイジ増加抑制
+
+    this.applyBattleCry();
+  }
+
+  applyBattleCry() {
+    const bc = this.data.skills.find(s => s.type === 'battlecry');
+    if (!bc) return;
+    if (bc.effect === 'heavy_wound') {
+      this.firstDodge = true;
+      this.damageBonusPercent = getParam(this.data.id, 'heavy_wound', 'param', bc.param);
+    }
+    if (bc.effect === 'attack_talent') {
+      this.attackRageBonus = getParam(this.data.id, 'attack_talent', 'param', bc.param || 3);
+    }
+    // torment は applyTorment() で両者に適用するためここでは処理しない
+    // waver は動的に処理
+  }
+
+  hasPassive(effect) {
+    return this.data.skills.some(s => s.type === 'passive' && s.effect === effect);
+  }
+
+  hasBattleCry(effect) {
+    return this.data.skills.some(s => s.type === 'battlecry' && s.effect === effect);
+  }
+
+  getATK() {
+    let mult = 1.0;
+
+    // パッシブ野性: HP10%減るたびに攻撃力UP
+    const wildSkill = this.data.skills.find(s => s.type === 'passive' && s.effect === 'wild');
+    if (wildSkill) {
+      const stacks = Math.floor((1 - this.hp / this.maxHP) * 10);
+      mult *= (1 + stacks * getParam(this.data.id, 'wild', 'param', wildSkill.param || 0.05));
+    }
+    const wildWeakSkill = this.data.skills.find(s => s.type === 'passive' && s.effect === 'wild_weak');
+    if (wildWeakSkill) {
+      const stacks = Math.floor((1 - this.hp / this.maxHP) * 10);
+      mult *= (1 + stacks * getParam(this.data.id, 'wild_weak', 'param', wildWeakSkill.param || 0.03));
+    }
+
+    // 戦吼-動揺
+    if (this.hasBattleCry('waver')) {
+      const waverBonus   = getParam(this.data.id, 'waver', 'param',  0.15);
+      const waverPenalty = getParam(this.data.id, 'waver', 'param2', 0.10);
+      if (this.attackCount < 3) mult *= (1 - waverPenalty);
+      else if (this.attackCount < 6) mult *= (1 + waverBonus);
+    }
+
+    return Math.round(this.baseATK * mult);
+  }
+
+  getActiveAttackSkill() {
+    return this.data.skills.find(s =>
+      s.type === 'attack' && this.atkRage >= getParam(this.data.id, s.effect, 'rageCost', s.rageCost || 0)
+    ) || null;
+  }
+
+  getActiveDefenseSkill() {
+    return this.data.skills.find(s =>
+      s.type === 'defense' && this.defRage >= getParam(this.data.id, s.effect, 'rageCost', s.rageCost || 0)
+    ) || null;
+  }
+
+  hpPct() { return Math.max(0, this.hp / this.maxHP); }
+}
+
+// ===== 6v6 シミュレーション =====
+function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
+  const validA = teamDataA.filter(Boolean);
+  const validB = teamDataB.filter(Boolean);
+  if (!validA.length || !validB.length) return null;
+
+  const teamA = validA.map(d => new Fighter(d));
+  const teamB = validB.map(d => new Fighter(d));
+
+  const log = [];
+  const push = (cls, msg) => { if (verbose) log.push({ cls, msg }); };
+  let actionHadCarryover = false;
+
+  const checkUndying = (target) => {
+    if (target.hp <= 0 && target.hasPassive('undying') && !target.undyingUsed) {
+      target.undyingUsed = true;
+      const recoverAmt = getParam(target.data.id, 'undying', 'param', 0.05);
+      target.hp = Math.ceil(target.maxHP * recoverAmt);
+      push('log-buff', t('undying', fighterName(target), target.hp));
+    }
+  };
+
+  const doAttack = (atk, def, defTeam, defIdx) => {
+    const noRageGain = atk.suppressRageGain;
+    atk.suppressRageGain = false;
+    actionHadCarryover = false;
+
+    // === 防御スキル（反応型）: 攻撃を受ける側がレイジ消費して発動 ===
+    const defReactSkill = def.getActiveDefenseSkill();
+    if (defReactSkill) {
+      const rc = getParam(def.data.id, defReactSkill.effect, 'rageCost', defReactSkill.rageCost || 0);
+      def.defRage -= rc;
+      if (defReactSkill.effect === 'harden') {
+        def.hardenReady = true;
+        def.hardenParam = getParam(def.data.id, 'harden', 'param', defReactSkill.param || 0.20);
+        push('log-skill', t('hardenUse', fighterName(def), skillName(defReactSkill), Math.round(def.hardenParam*100)));
+      } else if (defReactSkill.effect === 'thorns') {
+        def.thornsReady = true;
+        def.thornsParam = getParam(def.data.id, 'thorns', 'param', defReactSkill.param || 0.20);
+        push('log-skill', t('thornsUse', fighterName(def), skillName(defReactSkill), Math.round(def.thornsParam*100)));
+      } else if (defReactSkill.effect === 'purify') {
+        let removed = 0;
+        if (def.damageBonusTurns > 0) { def.damageBonusTurns = Math.max(0, def.damageBonusTurns - 2); removed++; }
+        if (def.agiDebuffAttacksLeft > 0) { def.agiDebuffAttacksLeft = Math.max(0, def.agiDebuffAttacksLeft - 2); removed++; }
+        if (def.lacerateTurns > 0) { def.lacerateTurns = Math.max(0, def.lacerateTurns - 2); removed++; }
+        const heal = Math.min(removed * 2, 2) * getParam(def.data.id, 'purify', 'param', defReactSkill.param || 5);
+        if (heal > 0) def.hp = Math.min(def.maxHP, def.hp + heal);
+        push('log-buff', t('purifyUse', fighterName(def), skillName(defReactSkill), Math.min(removed*2,2), heal));
+      }
+    }
+
+    // スキル抑制: 交代直後 or 敵が回避持ち（firstDodge）の場合は通常攻撃を優先
+    const skipByDodge = def.firstDodge;
+    const skipSkill = atk.suppressNextSkill || skipByDodge;
+    if (atk.suppressNextSkill) atk.suppressNextSkill = false;
+
+    // スキル確認
+    const atkSkill = skipSkill ? null : atk.getActiveAttackSkill();
+    if (atkSkill) {
+      push('log-skill', t('skillUse', fighterName(atk), skillName(atkSkill)));
+      atk.atkRage -= getParam(atk.data.id, atkSkill.effect, 'rageCost', atkSkill.rageCost || 0);
+    } else if (skipByDodge && atk.getActiveAttackSkill()) {
+      push('log-buff', t('dodgeNormal', fighterName(def), fighterName(atk)));
+    }
+
+    // ダメージ計算
+    const baseATK = atk.getATK() + (atk.hunterMarkBonus || 0);
+    const variance = 0.95 + Math.random() * 0.10;
+    let dmg = Math.round(baseATK * variance);
+
+    // 大地震撼: メイン攻撃を140%に強化
+    if (atkSkill?.effect === 'quake') {
+      const quakeRatio = getParam(atk.data.id, 'quake', 'param', atkSkill.param || 1.40);
+      dmg = Math.round(baseATK * quakeRatio * variance);
+    }
+
+    // 被ダメ補正
+    let dmgMult = 1.0;
+    if (def.damageBonusTurns > 0) dmgMult += def.damageBonusPercent;
+    dmgMult += def.tormentBonus; // 折磨: 被弾側の永続デバフ
+    if (def.hardenReady) {
+      dmgMult = Math.max(0, dmgMult - (def.hardenParam || 0.20));
+      def.hardenReady = false;
+      push('log-buff', t('hardenTriggered', fighterName(def)));
+    }
+    dmg = Math.round(dmg * dmgMult);
+
+    // 初回回避チェック
+    if (def.firstDodge) {
+      def.firstDodge = false;
+      def.damageBonusTurns = 3;
+      atk.attackCount++;
+      push('log-dodge', t('dodge', fighterName(def), Math.round(def.damageBonusPercent*100)));
+      return false;
+    }
+
+    // 傷口裂傷: 攻撃前に出血（前ターン適用分のみ）
+    if (def.lacerateTurns > 0) {
+      const bleedDmg = Math.round(def.maxHP * def.lacerateParam);
+      def.hp = Math.max(0, def.hp - bleedDmg);
+      def.lacerateTurns--;
+      push('log-debuff', t('bleedBefore', fighterName(def), bleedDmg, def.hp));
+      checkUndying(def);
+      if (def.hp <= 0) return true;
+    }
+
+    // ダメージ適用
+    def.hp = Math.max(0, def.hp - dmg);
+    checkUndying(def);
+    const defRageGain = Math.max(0, Math.round(def.will * 0.2778) - (def.hasBattleCry('attack_talent') ? getParam(def.data.id, 'attack_talent', 'param', 3) : 0));
+    def.defRage = Math.min(def.maxRage, def.defRage + defRageGain);
+    if (def.thornsReady) {
+      const reflectDmg = Math.round(dmg * def.thornsParam);
+      atk.hp = Math.max(0, atk.hp - reflectDmg);
+      def.thornsReady = false;
+      push('log-debuff', t('thornsReflect', fighterName(def), fighterName(atk), reflectDmg, atk.hp));
+    }
+    if (atk.hasPassive('hunter_mark')) {
+      atk.hunterMarkBonus = Math.min(90, atk.hunterMarkBonus + 9);
+    }
+    // 通常攻撃のみレイジ増加（レイジスキル使用時・交代直後は増加しない）
+    if (!atkSkill && !noRageGain) {
+      const rageGain = Math.round(atk.will * 0.2778) + atk.attackRageBonus;
+      atk.atkRage = Math.min(atk.maxRage, atk.atkRage + rageGain);
+    }
+    atk.attackCount++;
+    if (atk.agiDebuffAttacksLeft > 0) {
+      atk.agiDebuffAttacksLeft--;
+      if (atk.agiDebuffAttacksLeft === 0) {
+        atk.agi += atk.agiDebuffAmount;
+        atk.agiDebuffAmount = 0;
+        push('log-buff', t('speedDebuffEnd', fighterName(atk)));
+      }
+    }
+
+    // メイン攻撃ログ
+    const skillLabel = atkSkill ? `【${skillName(atkSkill)}】` : t('normalAttack');
+    const dmgLabel = def.damageBonusTurns > 0 ? t('damageBonus', Math.round(def.damageBonusPercent*100)) : '';
+    push('log-attack',
+      t('attackLog', fighterName(atk), fighterName(def), skillLabel, dmg, dmgLabel, def.hp));
+
+    // スキル追加効果
+    if (atkSkill) {
+      if (atkSkill.effect === 'combo') {
+        // 連撃: メイン攻撃後に追加打
+        // 注意: hardenはメイン攻撃のみに適用されるため、comboMult は harden なしで再計算
+        const comboRatio = getParam(atk.data.id, 'combo', 'param', atkSkill.param || 0.60);
+        const comboVariance = 0.95 + Math.random() * 0.10;
+
+        // 1撃目で相手が倒れた場合、2撃目は次の敵へキャリーオーバー（回避・不屈無効）
+        let comboTarget = def;
+        let comboCarryOver = false;
+        if (def.hp <= 0 && defTeam && defIdx + 1 < defTeam.length && defTeam[defIdx + 1].hp > 0) {
+          comboTarget = defTeam[defIdx + 1];
+          comboCarryOver = true;
+          actionHadCarryover = true;
+        }
+
+        // キャリーオーバー時も回避・不屈の魂は通常通り適用
+        if (comboCarryOver && comboTarget.firstDodge) {
+          comboTarget.firstDodge = false;
+          comboTarget.damageBonusTurns = 3;
+          push('log-dodge', t('comboDodge', fighterName(comboTarget), Math.round(comboTarget.damageBonusPercent*100)));
+        } else {
+          let comboMult = 1.0;
+          if (comboTarget.damageBonusTurns > 0) comboMult += comboTarget.damageBonusPercent;
+          comboMult += comboTarget.tormentBonus;
+          const comboDmg = Math.round(baseATK * comboRatio * comboVariance * comboMult);
+          comboTarget.hp = Math.max(0, comboTarget.hp - comboDmg);
+          checkUndying(comboTarget);
+          // 連撃の追加打は通常攻撃扱い: 速度・レイジに影響しない
+          atk.attackCount++;
+          if (atk.hasPassive('hunter_mark')) atk.hunterMarkBonus = Math.min(90, atk.hunterMarkBonus + 9);
+          const carryLog = comboCarryOver ? t('carryOver', fighterName(comboTarget)) : '';
+          push('log-skill', t('comboHit', comboDmg, carryLog, fighterName(comboTarget), comboTarget.hp));
+        }
+      } else if (atkSkill.effect === 'slow') {
+        const slowRate = getParam(atk.data.id, 'slow', 'param', atkSkill.param || 0.12);
+        const agiDown = Math.round(def.agi * slowRate);
+        def.agi = Math.max(1, def.agi - agiDown);
+        def.agiDebuffAttacksLeft = 2;
+        def.agiDebuffAmount += agiDown;
+        push('log-debuff', t('slowEffect', fighterName(def), agiDown, def.agi));
+      } else if (atkSkill.effect === 'breakthrough') {
+        const btAmt = getParam(atk.data.id, 'breakthrough', 'param', atkSkill.param || 13);
+        const atkDown = Math.min(btAmt, def.atkRage);
+        const defDown = Math.min(btAmt, def.defRage);
+        def.atkRage = Math.max(0, def.atkRage - btAmt);
+        def.defRage = Math.max(0, def.defRage - btAmt);
+        push('log-debuff', t('breakthroughEffect', fighterName(def), atkDown, defDown));
+      } else if (atkSkill.effect === 'quake') {
+        push('log-skill', t('quakeEffect', Math.round(getParam(atk.data.id,'quake','param',atkSkill.param||1.40)*100)));
+        const benchRatio = getParam(atk.data.id, 'quake', 'param2', atkSkill.param2 || 0);
+        if (benchRatio > 0 && defTeam) {
+          for (let i = defIdx + 1; i < defTeam.length; i++) {
+            const benched = defTeam[i];
+            if (benched.hp > 0) {
+              const benchDmg = Math.round(baseATK * benchRatio * variance);
+              benched.hp = Math.max(0, benched.hp - benchDmg);
+              checkUndying(benched);
+              push('log-debuff', t('benchDamage', fighterName(benched), benchDmg, benched.hp));
+            }
+          }
+        }
+      } else if (atkSkill.effect === 'lacerate') {
+        def.lacerateTurns = 3;
+        def.lacerateParam = getParam(atk.data.id, 'lacerate', 'param', atkSkill.param || 0.045);
+        push('log-debuff', t('lacerateEffect', fighterName(def), Math.round(def.lacerateParam*100)));
+      } else if (atkSkill.effect === 'drain') {
+        const healAmt = Math.round(dmg * getParam(atk.data.id, 'drain', 'param', atkSkill.param || 0.40));
+        atk.hp = Math.min(atk.maxHP, atk.hp + healAmt);
+        push('log-buff', t('drainEffect', fighterName(atk), healAmt, atk.hp));
+      }
+    }
+
+    return def.hp <= 0;
+  };
+
+  // 折磨を現在の対戦両者に適用（参戦時も再利用）
+  const applyTorment = (a, b) => {
+    [a, b].forEach(f => {
+      const bc = f.data.skills.find(s => s.type === 'battlecry' && s.effect === 'torment');
+      if (bc) {
+        const p = getParam(f.data.id, 'torment', 'param', bc.param || 0.25);
+        a.tormentBonus += p;
+        b.tormentBonus += p;
+        push('log-debuff', t('tormentStart', fighterName(f), Math.round(p*100)));
+      }
+    });
+  };
+  applyTorment(teamA[0], teamB[0]);
+
+  let idxA = 0, idxB = 0;
+  let chargeA = 0, chargeB = 0;
+  const CHARGE_MAX = 1000;
+  const MAX_ACTIONS = 2000;
+  let winningTeam = null;
+
+  const snapshots = [];
+  const snap = () => snapshots.push({
+    idxA, idxB,
+    hpA: teamA[idxA]?.hp ?? 0, maxHpA: teamA[idxA]?.maxHP ?? 1,
+    atkRageA: teamA[idxA]?.atkRage ?? 0, defRageA: teamA[idxA]?.defRage ?? 0,
+    hpB: teamB[idxB]?.hp ?? 0, maxHpB: teamB[idxB]?.maxHP ?? 1,
+    atkRageB: teamB[idxB]?.atkRage ?? 0, defRageB: teamB[idxB]?.defRage ?? 0,
+    teamAHp: teamA.map(f => f.hp),
+    teamBHp: teamB.map(f => f.hp),
+  });
+
+  // バトル開始ログ
+  push('log-start', t('battleStart'));
+  push('log-start', t('teamList', t('teamA'), teamA.map(f => fighterName(f)).join(' / ')));
+  push('log-start', t('teamList', t('teamB'), teamB.map(f => fighterName(f)).join(' / ')));
+  let kongMatchupHp = null; // k_kong_100がkongと対戦開始時のHP
+  const logNewMatchup = () => {
+    const a = teamA[idxA], b = teamB[idxB];
+    if ((a.data.id === 'kong' && b.data.id === 'k_kong_100') ||
+        (a.data.id === 'k_kong_100' && b.data.id === 'kong')) {
+      kongMatchupHp = b.data.id === 'k_kong_100' ? b.hp : a.hp;
+    }
+    push('log-start', t('matchup', fighterName(a), fighterName(b)));
+    if (a.firstDodge) push('log-buff', t('heavyWoundStart', fighterName(a)));
+    if (b.firstDodge) push('log-buff', t('heavyWoundStart', fighterName(b)));
+    if (a.hasBattleCry('attack_talent')) push('log-buff', t('attackTalentStart', fighterName(a)));
+    if (b.hasBattleCry('attack_talent')) push('log-buff', t('attackTalentStart', fighterName(b)));
+    if (a.hasBattleCry('waver')) push('log-buff', t('waverStart', fighterName(a)));
+    if (b.hasBattleCry('waver')) push('log-buff', t('waverStart', fighterName(b)));
+  };
+  logNewMatchup();
+  snap();
+
+  for (let action = 0; action < MAX_ACTIONS; action++) {
+    const a = teamA[idxA];
+    const b = teamB[idxB];
+
+    const timeToA = (CHARGE_MAX - chargeA) / a.agi;
+    const timeToB = (CHARGE_MAX - chargeB) / b.agi;
+
+    let actor, defender, isActorA, timeAdv;
+    if (timeToA <= timeToB) {
+      timeAdv = timeToA; actor = a; defender = b; isActorA = true;
+    } else {
+      timeAdv = timeToB; actor = b; defender = a; isActorA = false;
+    }
+    chargeA += timeAdv * a.agi;
+    chargeB += timeAdv * b.agi;
+    if (isActorA) chargeA = 0; else chargeB = 0;
+
+    push('log-turn', t('action', fighterName(actor)));
+    const defTeam = isActorA ? teamB : teamA;
+    const defIdx  = isActorA ? idxB  : idxA;
+    const killed = doAttack(actor, defender, defTeam, defIdx);
+    snap();
+
+    if (killed || defender.hp <= 0) {
+      push('log-winner', t('defeated', fighterName(defender)));
+
+      if (isActorA) {
+        idxB++;
+        if (idxB >= teamB.length) { winningTeam = 'A'; break; }
+        push('log-buff', t('joins', t('teamB'), fighterName(teamB[idxB]), teamB[idxB].maxHP));
+        applyTorment(teamA[idxA], teamB[idxB]);
+      } else {
+        idxA++;
+        if (idxA >= teamA.length) { winningTeam = 'B'; break; }
+        push('log-buff', t('joins', t('teamA'), fighterName(teamA[idxA]), teamA[idxA].maxHP));
+        applyTorment(teamA[idxA], teamB[idxB]);
+      }
+
+      // 交代処理: CTBリセット＋キャリーオーバーなし時は最初行動のレイジ増加なし
+      chargeA = 0; chargeB = 0;
+      if (!actionHadCarryover) actor.suppressRageGain = true;
+      logNewMatchup();
+      snap();
+      continue;
+    }
+
+    if (a.damageBonusTurns > 0) a.damageBonusTurns--;
+    if (b.damageBonusTurns > 0) b.damageBonusTurns--;
+  }
+
+  if (!winningTeam) {
+    const hpA = teamA.slice(idxA).reduce((s, f) => s + Math.max(0, f.hp), 0);
+    const hpB = teamB.slice(idxB).reduce((s, f) => s + Math.max(0, f.hp), 0);
+    winningTeam = hpA >= hpB ? 'A' : 'B';
+    push('log-winner', t('timeUp', winningTeam === 'A' ? t('teamA') : t('teamB')));
+  } else {
+    const aliveA = teamA.filter(f => f.hp > 0).length;
+    const aliveB = teamB.filter(f => f.hp > 0).length;
+    push('log-winner', t('teamWin', winningTeam === 'A' ? t('teamA') : t('teamB'), aliveA, aliveB));
+  }
+
+  return { winningTeam, teamA, teamB, idxA, idxB, log, snapshots, kongMatchupHp };
+}
+
+// ===== チームビルダー =====
+// デフォルト構成
+const TEAM_SEL = {
+  A: ['kong', 'dark_rex', 'young_rex', '', '', ''],
+  B: ['k_kong', 'k_tyrex', 'gigant', '', '', '']
+};
+
+function buildCharOptions() {
+  const ids = [
+    'kong','dark_rex','young_rex',
+    'kibarra_rex_50','kibarra_rex','mini_rex','white_saber','tyrannorex','mineral_rex','golden_rex','ice_ptera',
+    'k_kong','k_kong_100','k_tyrex','gigant'
+  ];
+  const seen = new Set();
+  const options = ids
+    .filter(id => {
+      const name = CHARS[id].name
+        .replace(/\s*\(K\)$/i, '')
+        .replace(/【相手】$/, '')
+        .trim();
+      if (seen.has(name)) return false;
+      seen.add(name);
+      return true;
+    })
+    .map(id => `<option value="${id}">${optionCharName(id)}</option>`)
+    .join('');
+  return `<option value="">${t('none')}</option>` + options;
+}
+
+function initTeamBuilder() {
+  ['A','B'].forEach(side => {
+    const container = document.getElementById('slots' + side);
+    const opts = buildCharOptions();
+    for (let i = 0; i < 6; i++) {
+      const defVal = TEAM_SEL[side][i] || '';
+      const wrap = document.createElement('div');
+      wrap.className = 'team-slot-wrap';
+      wrap.innerHTML = `
+        <div class="team-slot">
+          <span class="slot-num">${i+1}</span>
+          <select id="sel${side}${i}" onchange="onSlotChange('${side}',${i})">${opts}</select>
+          <span class="slot-agi" id="agi${side}${i}"></span>
+          <button class="slot-edit-btn" onclick="toggleSlotEditor('${side}',${i})" title="${t('skillAdjust')}">⚙️</button>
+        </div>
+        <div class="slot-editor" id="edi${side}${i}" style="display:none"></div>
+      `;
+      container.appendChild(wrap);
+      if (defVal) {
+        document.getElementById('sel' + side + i).value = defVal;
+      }
+      updateSlotAgi(side, i);
+    }
+  });
+}
+
+function rebuildTeamBuilder() {
+  ['A','B'].forEach(side => {
+    const container = document.getElementById('slots' + side);
+    if (container) container.innerHTML = '';
+  });
+  initTeamBuilder();
+}
+
+function onSlotChange(side, idx) {
+  const prevId = TEAM_SEL[side][idx];
+  const newId = document.getElementById('sel' + side + idx).value;
+  TEAM_SEL[side][idx] = newId;
+  // キャラ変更時のみリセット（同じキャラ再選択は保持）
+  if (prevId !== newId) {
+    SLOT_STAT[side][idx] = {};
+  }
+  saveToStorage();
+  updateSlotAgi(side, idx);
+  const edEl = document.getElementById('edi' + side + idx);
+  // キャラ選択時は⚙️を自動オープン
+  if (newId) {
+    renderSlotEditor(side, idx);
+    edEl.style.display = 'block';
+  } else {
+    edEl.style.display = 'none';
+  }
+}
+
+function updateSlotAgi(side, idx) {
+  const charId = TEAM_SEL[side][idx];
+  const el = document.getElementById('agi' + side + idx);
+  if (!charId) { el.textContent = ''; return; }
+  const ov = SLOT_STAT[side][idx];
+  const agi = ov?.agi ?? CHARS[charId].agi;
+  el.textContent = `AGI:${agi}`;
+}
+
+function updateAllSlotAgis() {
+  ['A','B'].forEach(side => {
+    for (let i = 0; i < 6; i++) updateSlotAgi(side, i);
+  });
+}
+
+function toggleSlotEditor(side, idx) {
+  const el = document.getElementById('edi' + side + idx);
+  if (el.style.display === 'none') { renderSlotEditor(side, idx); el.style.display = 'block'; }
+  else el.style.display = 'none';
+}
+
+function renderSlotEditor(side, idx) {
+  const charId = TEAM_SEL[side][idx];
+  const el = document.getElementById('edi' + side + idx);
+  if (!charId) { el.innerHTML = `<p style="color:var(--text-dim);font-size:0.72rem">${t('chooseCharacter')}</p>`; return; }
+  const char = CHARS[charId];
+  const ov = SLOT_STAT[side][idx] || {};
+  const sv = (k) => ov[k] ?? char[k];
+  const si = (k) => `setSlotStat('${side}',${idx},'${k}',parseInt(this.value)||0)`;
+  const hpStartVal = ov.hp_start ?? '';
+  let html = `<div class="skill-edit-row"><div class="skill-edit-name">${t('baseStats')}</div><div class="skill-edit-fields">
+    <div class="skill-edit-field"><span>Lv:</span><input type="number" value="${sv('lv')}" min="1" max="200" oninput="${si('lv')}"></div>
+    <div class="skill-edit-field"><span>DUR:</span><input type="number" value="${sv('dur')}" min="1" max="9999" oninput="${si('dur')}"></div>
+    <div class="skill-edit-field"><span>ATK:</span><input type="number" value="${sv('atk')}" min="1" max="9999" oninput="${si('atk')}"></div>
+    <div class="skill-edit-field"><span>AGI:</span><input type="number" value="${sv('agi')}" min="1" max="9999" oninput="${si('agi')}"></div>
+    <div class="skill-edit-field"><span>WIL:</span><input type="number" value="${sv('will')}" min="1" max="9999" oninput="${si('will')}"></div>
+  </div></div>
+  <div class="skill-edit-row"><div class="skill-edit-name" style="color:var(--text-dim);font-size:0.7rem">${t('startHp')}</div><div class="skill-edit-fields">
+    <div class="skill-edit-field"><span>HP:</span><input type="number" value="${hpStartVal}" min="1" max="99999" placeholder="${t('fullHp')}"
+      oninput="setSlotStat('${side}',${idx},'hp_start',parseInt(this.value)||null)"
+      onchange="if(!this.value){setSlotStat('${side}',${idx},'hp_start',null)}"></div>
+    <span style="color:var(--text-dim);font-size:0.68rem">${t('example')}: 586</span>
+  </div></div>`;
+  char.skills.forEach(skill => {
+    const info = PARAM_INFO[skill.effect] || {};
+    const hasRage = skill.rageCost !== undefined;
+    const hasParam = info.param !== undefined;  // PARAM_INFOに登録があれば表示
+    const knownEffect = Object.keys(PARAM_INFO).includes(skill.effect);
+    if (!hasRage && !hasParam && !knownEffect) return;
+    html += `<div class="skill-edit-row"><div class="skill-edit-name">${skillName(skill)}</div><div class="skill-edit-fields">`;
+    if (!hasRage && !hasParam) {
+      html += `<span style="color:var(--text-dim);font-size:0.72rem">${t('unavailable')}</span>`;
+    }
+    if (hasRage) {
+      const cur = getParam(charId, skill.effect, 'rageCost', skill.rageCost);
+      const lbl = skill.type === 'defense' ? t('defenseRage') : t('attackRage');
+      html += `<div class="skill-edit-field"><span>${lbl}</span><input type="number" value="${cur}" min="0" max="100" oninput="setParam('${charId}','${skill.effect}','rageCost',parseInt(this.value)||0)"></div>`;
+    }
+    if (hasParam) {
+      const [label, isPercent, defaultVal] = info.param;
+      const raw = getParam(charId, skill.effect, 'param', skill.param ?? defaultVal);
+      const disp = isPercent ? Math.round(raw * 100) : raw;
+      const onChange = isPercent ? `setParam('${charId}','${skill.effect}','param',parseFloat(this.value)/100)` : `setParam('${charId}','${skill.effect}','param',parseFloat(this.value)||0)`;
+      html += `<div class="skill-edit-field"><span>${paramLabel(label)}:</span><input type="number" value="${disp}" min="0" max="${isPercent?300:999}" step="1" oninput="${onChange}">${isPercent?'%':''}</div>`;
+    }
+    if (info.param2) {
+      const [label2, isPercent2, defaultVal2] = info.param2;
+      const raw2 = getParam(charId, skill.effect, 'param2', defaultVal2);
+      const disp2 = isPercent2 ? Math.round(raw2 * 100) : raw2;
+      const onChange2 = isPercent2 ? `setParam('${charId}','${skill.effect}','param2',parseFloat(this.value)/100)` : `setParam('${charId}','${skill.effect}','param2',parseFloat(this.value)||0)`;
+      html += `<div class="skill-edit-field"><span>${paramLabel(label2)}:</span><input type="number" value="${disp2}" min="0" max="${isPercent2?300:999}" step="1" oninput="${onChange2}">${isPercent2?'%':''}</div>`;
+    }
+    html += `</div></div>`;
+  });
+  el.innerHTML = html || `<p style="color:var(--text-dim);font-size:0.72rem">${t('noAdjustments')}</p>`;
+}
+
+function getTeamData(side) {
+  return TEAM_SEL[side].map((id, idx) => {
+    if (!id) return null;
+    const base = CHARS[id];
+    const ov = SLOT_STAT[side][idx] || {};
+    return Object.assign({}, base, {
+      dur:      ov.dur      ?? base.dur,
+      atk:      ov.atk      ?? base.atk,
+      agi:      ov.agi      ?? base.agi,
+      will:     ov.will     ?? base.will,
+      lv:       ov.lv       ?? base.lv,
+      hp_start: ov.hp_start ?? null,
+    });
+  }).filter(Boolean);
+}
+
+// ===== UI 関数 =====
+function stars(n) { return '★'.repeat(n) + '☆'.repeat(5-n); }
+
+function setBar(id, pct) {
+  const bar = document.getElementById(id);
+  bar.style.width = (pct * 100) + '%';
+  bar.className = 'bar-inner hp-bar' + (pct < 0.3 ? ' low' : pct < 0.6 ? ' mid' : '');
+}
+
+function updateCurrentFighters(result) {
+  const { teamA, teamB, idxA, idxB, winningTeam } = result;
+  const fa = teamA[idxA] || teamA[teamA.length - 1];
+  const fb = teamB[idxB] || teamB[teamB.length - 1];
+  document.getElementById('fighters').style.display = 'flex';
+  document.getElementById('nameA').textContent = fighterName(fa);
+  document.getElementById('lvA').textContent = `Lv${fa.data.lv} ${stars(fa.data.stars)}`;
+  document.getElementById('nameB').textContent = fighterName(fb);
+  document.getElementById('lvB').textContent = `Lv${fb.data.lv} ${stars(fb.data.stars)}`;
+  setBar('hpBarA', fa.hpPct());
+  setBar('hpBarB', fb.hpPct());
+  document.getElementById('hpTextA').textContent = `${Math.max(0,fa.hp)}/${fa.maxHP}`;
+  document.getElementById('hpTextB').textContent = `${Math.max(0,fb.hp)}/${fb.maxHP}`;
+  document.getElementById('rageTextA').textContent = `${t('attackShort')}${fa.atkRage} ${t('defenseShort')}${fa.defRage}`;
+  document.getElementById('rageTextB').textContent = `${t('attackShort')}${fb.atkRage} ${t('defenseShort')}${fb.defRage}`;
+  document.getElementById('rageBarA').style.width = Math.max(fa.atkRage, fa.defRage) + '%';
+  document.getElementById('rageBarB').style.width = Math.max(fb.atkRage, fb.defRage) + '%';
+  document.getElementById('cardA').className = 'fighter-card' + (winningTeam === 'A' ? ' winner' : winningTeam === 'B' ? ' loser' : '');
+  document.getElementById('cardB').className = 'fighter-card' + (winningTeam === 'B' ? ' winner' : winningTeam === 'A' ? ' loser' : '');
+}
+
+function updateRoster(result) {
+  const { teamA, teamB, idxA, idxB } = result;
+  document.getElementById('teamRosters').style.display = 'flex';
+  ['A','B'].forEach(side => {
+    const team = side === 'A' ? teamA : teamB;
+    const curIdx = side === 'A' ? idxA : idxB;
+    const el = document.getElementById('roster' + side);
+    el.innerHTML = team.map((f, i) => {
+      const cls = i < curIdx ? 'dead' : i === curIdx ? 'current' : 'alive';
+      const displayName = fighterName(f);
+      const shortName = displayName.replace('(K)','K').replace('レックス','REX').replace('コング','Kong').replace('ホワイトサーベル','WSB').replace('ギガント王竜','Giant').replace('ヤング','Y').replace('暗黒','Dark').replace('怪力','').replace('暴王','').replace('黄棘','').replace('ミニ','Mini').slice(0, 8);
+      return `<div class="roster-icon ${cls}" title="${displayName} HP:${Math.max(0,f.hp)}/${f.maxHP}">${shortName}</div>`;
+    }).join('');
+  });
+}
+
+function startBattle6v6() {
+  const tdA = getTeamData('A');
+  const tdB = getTeamData('B');
+  if (!tdA.length || !tdB.length) { alert(t('needTeams')); return; }
+  const result = simulateBattle6v6(tdA, tdB, true);
+  if (!result) return;
+
+  updateCurrentFighters(result);
+  updateRoster(result);
+
+  const logArea = document.getElementById('logArea');
+  logArea.innerHTML = result.log.map(l => `<div class="${l.cls}">${l.msg}</div>`).join('');
+  logArea.scrollTop = logArea.scrollHeight;
+
+  document.getElementById('monteResult').style.display = 'none';
+}
+
+function runMonteCarlo6v6() {
+  const tdA = getTeamData('A');
+  const tdB = getTeamData('B');
+  if (!tdA.length || !tdB.length) { alert(t('needTeams')); return; }
+  let winsA = 0, winsB = 0;
+  const hpStatsA = [], hpStatsB = [];
+  const survStatsA = [], survStatsB = [];
+  const kongHpWhenFacingLv61 = []; // Lv100がLv61と対戦開始時のHP記録
+  const kongLv61FinalHp = []; // チームA勝利時のLv61最終HP
+  const N = 1000;
+  for (let i = 0; i < N; i++) {
+    const res = simulateBattle6v6(tdA, tdB, false);
+    if (res && res.kongMatchupHp != null) kongHpWhenFacingLv61.push(res.kongMatchupHp);
+    if (!res) break;
+    if (res.winningTeam === 'A') {
+      winsA++;
+      const alive = res.teamA.filter(f => f.hp > 0);
+      hpStatsA.push(alive.reduce((s, f) => s + f.hp, 0));
+      survStatsA.push(alive.length);
+      const lv61 = res.teamA.find(f => f.data.id === 'kong');
+      if (lv61 && lv61.hp > 0) kongLv61FinalHp.push(lv61.hp);
+    } else {
+      winsB++;
+      const alive = res.teamB.filter(f => f.hp > 0);
+      hpStatsB.push(alive.reduce((s, f) => s + f.hp, 0));
+      survStatsB.push(alive.length);
+    }
+  }
+
+  const stat = arr => arr.length ? {
+    min: Math.min(...arr),
+    avg: Math.round(arr.reduce((s,v)=>s+v,0)/arr.length),
+    max: Math.max(...arr)
+  } : null;
+  const stA = stat(hpStatsA), stB = stat(hpStatsB);
+  const avgSurvA = survStatsA.length ? (survStatsA.reduce((s,v)=>s+v,0)/survStatsA.length).toFixed(1) : '-';
+  const avgSurvB = survStatsB.length ? (survStatsB.reduce((s,v)=>s+v,0)/survStatsB.length).toFixed(1) : '-';
+
+  const pctA = (winsA / N * 100).toFixed(0);
+  const pctB = (winsB / N * 100).toFixed(0);
+  const nameA = tdA.map(c => charName(c.id)).join('/');
+  const nameB = tdB.map(c => charName(c.id)).join('/');
+
+  document.getElementById('monteBarA').style.width = pctA + '%';
+  document.getElementById('monteBarA').textContent = pctA + '%';
+  document.getElementById('monteBarB').style.width = pctB + '%';
+  document.getElementById('monteBarB').textContent = pctB + '%';
+  document.getElementById('monteNameA').textContent = t('teamA');
+  document.getElementById('monteNameB').textContent = t('teamB');
+
+  const hpRowA = stA ? `<div style="margin-top:6px;padding:6px 8px;background:rgba(41,128,185,0.1);border-radius:6px;border-left:2px solid #2980b9">
+    ${t('hpRow', t('teamA'), stA.min, stA.avg, stA.max, avgSurvA)}
+  </div>` : '';
+  const hpRowB = stB ? `<div style="margin-top:4px;padding:6px 8px;background:rgba(192,57,43,0.1);border-radius:6px;border-left:2px solid #c0392b">
+    ${t('hpRow', t('teamB'), stB.min, stB.avg, stB.max, avgSurvB)}
+  </div>` : '';
+
+  const kongHpStat = kongHpWhenFacingLv61.length ? (() => {
+    const sorted = [...kongHpWhenFacingLv61].sort((a,b)=>a-b);
+    return t('statLine', sorted[0], Math.round(sorted.reduce((s,v)=>s+v,0)/sorted.length), sorted[sorted.length-1], t('casesUnder', sorted.filter(v=>v<=700).length, 700));
+  })() : t('noKong');
+
+  const lv61FinalStat = kongLv61FinalHp.length ? (() => {
+    const sorted = [...kongLv61FinalHp].sort((a,b)=>a-b);
+    const under1200 = sorted.filter(v=>v<=1200).length;
+    return t('statLine', sorted[0], Math.round(sorted.reduce((s,v)=>s+v,0)/sorted.length), sorted[sorted.length-1], t('casesUnderTotal', under1200, 1200, kongLv61FinalHp.length));
+  })() : t('noLv61');
+
+  document.getElementById('monteStats').innerHTML =
+    `<div>${t('winRate', t('teamA'), pctA, nameA)}</div>
+     <div>${t('winRate', t('teamB'), pctB, nameB)}</div>
+     <div style="margin-top:4px">${t('judgement', winsA >= winsB ? t('teamA') : t('teamB'), Math.max(winsA,winsB), N)}</div>
+     ${hpRowA}${hpRowB}
+     <div style="margin-top:4px;padding:6px 8px;background:rgba(255,165,0,0.1);border-radius:6px;border-left:2px solid orange;font-size:0.85em">
+       ${t('lv100Hp')} ${kongHpStat}
+     </div>
+     <div style="margin-top:4px;padding:6px 8px;background:rgba(100,200,100,0.1);border-radius:6px;border-left:2px solid #27ae60;font-size:0.85em">
+       ${t('lv61FinalHp')} ${lv61FinalStat}
+     </div>`;
+
+  document.getElementById('monteResult').style.display = 'block';
+}
+
+function toggleConfigSummary() {
+  const panel = document.getElementById('configSummary');
+  if (panel.style.display === 'flex') { panel.style.display = 'none'; return; }
+  ['A','B'].forEach(side => {
+    const team = getTeamData(side);
+    const el = document.getElementById('configTeam' + side);
+    const label = side === 'A' ? t('teamAOwn') : t('teamBEnemy');
+    if (!team.length) {
+      el.innerHTML = `<div class="config-team-title">${label}</div><div class="config-empty">${t('unselected')}</div>`;
+      return;
+    }
+    let html = `<div class="config-team-title">${label}</div>`;
+    team.forEach(c => {
+      const hp = c.dur * 4;
+      const rageGain = Math.round(c.will * 0.2778);
+      let skillRows = '';
+      c.skills.forEach(s => {
+        const info = PARAM_INFO[s.effect] || {};
+        let detail = '';
+        if (s.rageCost !== undefined) {
+          const rc = getParam(c.id, s.effect, 'rageCost', s.rageCost);
+          detail += `${t('cost')}<b>${rc}</b> `;
+        }
+        if (info.param) {
+          const [lbl, isPct] = info.param;
+          const val = getParam(c.id, s.effect, 'param', s.param ?? info.param[2]);
+          detail += `${paramLabel(lbl)}:<b>${isPct ? Math.round(val*100)+'%' : val}</b> `;
+        }
+        if (info.param2) {
+          const [lbl2, isPct2] = info.param2;
+          const val2 = getParam(c.id, s.effect, 'param2', s.param2 ?? info.param2[2]);
+          if (val2) detail += `${paramLabel(lbl2)}:<b>${isPct2 ? Math.round(val2*100)+'%' : val2}</b>`;
+        }
+        skillRows += `<div class="config-skill-row">${skillName(s)}${detail ? ' - ' + detail : ''}</div>`;
+      });
+      html += `<div class="config-char-row">
+        <div class="config-char-name">Lv${c.lv} ${charName(c.id)} ${stars(c.stars)}</div>
+        <div class="config-char-stats">HP:<span>${hp}</span> ATK:<span>${c.atk}</span> AGI:<span>${c.agi}</span> WIL:<span>${c.will}</span> -> ${t('rageGainShort')}<span>${rageGain}</span>${t('perAction')}</div>
+        ${skillRows}
+      </div>`;
+    });
+    el.innerHTML = html;
+  });
+  panel.style.display = 'flex';
+}
+
+// 初期化
+loadFromStorage();
+applyI18n();
+initTeamBuilder();
+</script>
+
+</body>
+</html>
