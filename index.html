@@ -453,6 +453,112 @@
       font-size: 0.75rem;
       text-align: center;
     }
+    /* プレイヤープリセット */
+    .player-presets {
+      max-width: 860px;
+      margin: 0 auto 22px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .preset-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .preset-title {
+      color: var(--gold2);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .preset-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .preset-actions input,
+    .preset-actions select {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 9px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      min-height: 34px;
+    }
+    .preset-actions input { width: 180px; }
+    .preset-actions select { color: var(--gold); }
+    .preset-mini-btn {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      border-radius: 6px;
+      padding: 7px 10px;
+      min-height: 34px;
+      font-family: inherit;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .preset-mini-btn:hover { border-color: var(--gold); color: var(--gold2); }
+    .preset-mini-btn.danger { color: #e07a6f; }
+    .preset-list {
+      display: grid;
+      gap: 7px;
+    }
+    .preset-empty {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      padding: 8px 2px 2px;
+    }
+    .preset-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(90,74,32,0.65);
+      border-radius: 6px;
+      padding: 9px 10px;
+    }
+    .preset-name {
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .preset-meta {
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      margin-top: 3px;
+      line-height: 1.5;
+    }
+    .preset-row-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .preset-status {
+      min-height: 16px;
+      color: var(--gold);
+      font-size: 0.73rem;
+      margin-top: 8px;
+    }
+    @media (max-width: 600px) {
+      .preset-head { align-items: stretch; flex-direction: column; }
+      .preset-actions { justify-content: stretch; }
+      .preset-actions input,
+      .preset-actions select,
+      .preset-actions button { flex: 1 1 100%; width: 100%; }
+      .preset-row { grid-template-columns: 1fr; }
+      .preset-row-actions { justify-content: stretch; }
+      .preset-row-actions button { flex: 1; }
+    }
     /* ロスター（生存状況） */
     .team-rosters {
       display: flex;
@@ -530,6 +636,21 @@
   <button class="btn" style="background:var(--panel2);border:1px solid var(--border);color:var(--text-dim);font-size:0.8rem;padding:8px 14px;" onclick="toggleConfigSummary()">📋 <span data-i18n="showConfig">現在の設定を確認</span></button>
 </div>
 
+<div class="player-presets">
+  <div class="preset-head">
+    <div class="preset-title" data-i18n="playerPresets">プレイヤー保存</div>
+    <div class="preset-actions">
+      <input id="presetNameInput" type="text" maxlength="40" data-i18n-placeholder="presetNamePlaceholder" placeholder="プレイヤー名">
+      <select id="presetSourceSide" aria-label="Preset source team">
+        <option value="A" data-i18n="teamA">チームA</option>
+        <option value="B" data-i18n="teamB">チームB</option>
+      </select>
+      <button class="preset-mini-btn" onclick="savePlayerPreset()" data-i18n="savePreset">保存</button>
+    </div>
+  </div>
+  <div class="preset-list" id="presetList"></div>
+  <div class="preset-status" id="presetStatus"></div>
+</div>
 <div class="config-summary" id="configSummary">
   <div class="config-team-block" id="configTeamA"></div>
   <div class="config-team-block" id="configTeamB"></div>
@@ -591,6 +712,17 @@ const I18N = {
     startBattle: '戦闘開始',
     monteButton: '1000回シミュレーション',
     showConfig: '現在の設定を確認',
+    playerPresets: 'プレイヤー保存',
+    presetNamePlaceholder: 'プレイヤー名',
+    savePreset: '保存',
+    loadToTeamA: 'Aへ反映',
+    loadToTeamB: 'Bへ反映',
+    deletePreset: '削除',
+    noPresets: '保存データなし',
+    savedFrom: '保存元',
+    presetSaved: (name) => `${name}を保存しました`,
+    presetLoaded: (name, team) => `${name}を${team}へ反映しました`,
+    presetDeleted: (name) => `${name}を削除しました`,
     rage: 'レイジ',
     placeholder: '「戦闘開始」を押すと戦闘ログが表示されます',
     monteTitle: 'モンテカルロシミュレーション結果（1000回）',
@@ -672,6 +804,17 @@ const I18N = {
     startBattle: 'Start Battle',
     monteButton: 'Run 1000 Simulations',
     showConfig: 'Review Current Setup',
+    playerPresets: 'Player Presets',
+    presetNamePlaceholder: 'Player name',
+    savePreset: 'Save',
+    loadToTeamA: 'Load to A',
+    loadToTeamB: 'Load to B',
+    deletePreset: 'Delete',
+    noPresets: 'No saved data',
+    savedFrom: 'Saved from',
+    presetSaved: (name) => `Saved ${name}`,
+    presetLoaded: (name, team) => `Loaded ${name} to ${team}`,
+    presetDeleted: (name) => `Deleted ${name}`,
     rage: 'Rage',
     placeholder: 'Press Start Battle to show the battle log',
     monteTitle: 'Monte Carlo Simulation Result (1000 runs)',
@@ -753,6 +896,17 @@ const I18N = {
     startBattle: 'Начать бой',
     monteButton: '1000 симуляций',
     showConfig: 'Проверить настройки',
+    playerPresets: 'Пресеты игроков',
+    presetNamePlaceholder: 'Имя игрока',
+    savePreset: 'Сохранить',
+    loadToTeamA: 'В A',
+    loadToTeamB: 'В B',
+    deletePreset: 'Удалить',
+    noPresets: 'Нет сохранений',
+    savedFrom: 'Источник',
+    presetSaved: (name) => `${name} сохранен`,
+    presetLoaded: (name, team) => `${name} загружен в ${team}`,
+    presetDeleted: (name) => `${name} удален`,
     rage: 'Ярость',
     placeholder: 'Нажмите «Начать бой», чтобы увидеть журнал',
     monteTitle: 'Результат Монте-Карло (1000 запусков)',
@@ -834,6 +988,17 @@ const I18N = {
     startBattle: '开始战斗',
     monteButton: '模拟1000次',
     showConfig: '查看当前设置',
+    playerPresets: '玩家保存',
+    presetNamePlaceholder: '玩家名',
+    savePreset: '保存',
+    loadToTeamA: '应用到A',
+    loadToTeamB: '应用到B',
+    deletePreset: '删除',
+    noPresets: '没有保存数据',
+    savedFrom: '保存来源',
+    presetSaved: (name) => `已保存${name}`,
+    presetLoaded: (name, team) => `已将${name}应用到${team}`,
+    presetDeleted: (name) => `已删除${name}`,
     rage: '怒气',
     placeholder: '点击“开始战斗”后显示战斗日志',
     monteTitle: '蒙特卡洛模拟结果（1000次）',
@@ -1005,6 +1170,9 @@ function applyI18n() {
   });
   const select = document.getElementById('languageSelect');
   if (select) select.value = currentLang;
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
 }
 
 function refreshLanguage() {
@@ -1013,6 +1181,7 @@ function refreshLanguage() {
   updateAllSlotAgis();
   document.getElementById('logArea').innerHTML = `<div class="placeholder">${t('placeholder')}</div>`;
   document.getElementById('monteResult').style.display = 'none';
+  renderPlayerPresetList();
   if (document.getElementById('configSummary').style.display === 'flex') {
     document.getElementById('configSummary').style.display = 'none';
     toggleConfigSummary();
@@ -1028,6 +1197,7 @@ function setLanguage(lang) {
 // ===== スキルパラメーター上書きシステム =====
 const OVERRIDES = {};
 const SLOT_STAT = { A: {}, B: {} };
+const PLAYER_PRESETS = [];
 
 function getParam(charId, effect, key, fallback) {
   const k = `${charId}.${effect}.${key}`;
@@ -1043,6 +1213,7 @@ function saveToStorage() {
     localStorage.setItem('battleSim_SLOT_STAT', JSON.stringify(SLOT_STAT));
     localStorage.setItem('battleSim_TEAM_SEL', JSON.stringify(TEAM_SEL));
     localStorage.setItem('battleSim_LANG', currentLang);
+    localStorage.setItem('battleSim_PLAYER_PRESETS', JSON.stringify(PLAYER_PRESETS));
   } catch(e) {}
 }
 function loadFromStorage() {
@@ -1055,7 +1226,115 @@ function loadFromStorage() {
     if (ss) { const d = JSON.parse(ss); Object.assign(SLOT_STAT.A, d.A||{}); Object.assign(SLOT_STAT.B, d.B||{}); }
     const ts = localStorage.getItem('battleSim_TEAM_SEL');
     if (ts) { const d = JSON.parse(ts); Object.assign(TEAM_SEL.A, d.A); Object.assign(TEAM_SEL.B, d.B); }
+    const ps = localStorage.getItem('battleSim_PLAYER_PRESETS');
+    if (ps) PLAYER_PRESETS.splice(0, PLAYER_PRESETS.length, ...JSON.parse(ps));
   } catch(e) {}
+}
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+}
+
+function cloneSlotStats(side) {
+  const out = {};
+  Object.keys(SLOT_STAT[side] || {}).forEach(idx => {
+    out[idx] = Object.assign({}, SLOT_STAT[side][idx]);
+  });
+  return out;
+}
+
+function collectOverrideSnapshot(charIds) {
+  const ids = new Set(charIds.filter(Boolean));
+  const out = {};
+  Object.keys(OVERRIDES).forEach(key => {
+    const charId = key.split('.')[0];
+    if (ids.has(charId)) out[key] = OVERRIDES[key];
+  });
+  return out;
+}
+
+function presetSummary(preset) {
+  return preset.slots
+    .filter(Boolean)
+    .map(id => optionCharName(id))
+    .join(' / ') || t('unselected');
+}
+
+function renderPlayerPresetList() {
+  const list = document.getElementById('presetList');
+  if (!list) return;
+  if (!PLAYER_PRESETS.length) {
+    list.innerHTML = `<div class="preset-empty">${t('noPresets')}</div>`;
+    return;
+  }
+  list.innerHTML = PLAYER_PRESETS.map(preset => {
+    const source = preset.sourceSide === 'B' ? t('teamB') : t('teamA');
+    return `<div class="preset-row">
+      <div>
+        <div class="preset-name">${escapeHtml(preset.name)}</div>
+        <div class="preset-meta">${t('savedFrom')}: ${source} / ${escapeHtml(presetSummary(preset))}</div>
+      </div>
+      <div class="preset-row-actions">
+        <button class="preset-mini-btn" onclick="loadPlayerPreset('${preset.id}','A')">${t('loadToTeamA')}</button>
+        <button class="preset-mini-btn" onclick="loadPlayerPreset('${preset.id}','B')">${t('loadToTeamB')}</button>
+        <button class="preset-mini-btn danger" onclick="deletePlayerPreset('${preset.id}')">${t('deletePreset')}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setPresetStatus(message) {
+  const el = document.getElementById('presetStatus');
+  if (el) el.textContent = message || '';
+}
+
+function savePlayerPreset() {
+  const nameInput = document.getElementById('presetNameInput');
+  const sourceSide = document.getElementById('presetSourceSide')?.value === 'B' ? 'B' : 'A';
+  const fallbackName = `${sourceSide === 'A' ? t('teamA') : t('teamB')} ${new Date().toLocaleString()}`;
+  const name = (nameInput?.value || '').trim() || fallbackName;
+  const slots = TEAM_SEL[sourceSide].slice(0, 6);
+  const preset = {
+    id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`,
+    name,
+    sourceSide,
+    slots,
+    slotStats: cloneSlotStats(sourceSide),
+    overrides: collectOverrideSnapshot(slots),
+    savedAt: Date.now(),
+  };
+  PLAYER_PRESETS.unshift(preset);
+  if (PLAYER_PRESETS.length > 30) PLAYER_PRESETS.length = 30;
+  if (nameInput) nameInput.value = '';
+  saveToStorage();
+  renderPlayerPresetList();
+  setPresetStatus(t('presetSaved', name));
+}
+
+function loadPlayerPreset(id, targetSide) {
+  const preset = PLAYER_PRESETS.find(p => p.id === id);
+  if (!preset || !SLOT_STAT[targetSide]) return;
+  for (let i = 0; i < 6; i++) TEAM_SEL[targetSide][i] = preset.slots[i] || '';
+  Object.keys(SLOT_STAT[targetSide]).forEach(key => delete SLOT_STAT[targetSide][key]);
+  Object.keys(preset.slotStats || {}).forEach(key => {
+    SLOT_STAT[targetSide][key] = Object.assign({}, preset.slotStats[key]);
+  });
+  Object.assign(OVERRIDES, preset.overrides || {});
+  saveToStorage();
+  rebuildTeamBuilder();
+  renderPlayerPresetList();
+  const teamLabel = targetSide === 'A' ? t('teamA') : t('teamB');
+  setPresetStatus(t('presetLoaded', preset.name, teamLabel));
+  document.getElementById('logArea').innerHTML = `<div class="placeholder">${t('placeholder')}</div>`;
+  document.getElementById('monteResult').style.display = 'none';
+}
+
+function deletePlayerPreset(id) {
+  const idx = PLAYER_PRESETS.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  const [removed] = PLAYER_PRESETS.splice(idx, 1);
+  saveToStorage();
+  renderPlayerPresetList();
+  setPresetStatus(t('presetDeleted', removed.name));
 }
 function setSlotStat(side, idx, key, val) {
   if (!SLOT_STAT[side][idx]) SLOT_STAT[side][idx] = {};
@@ -2092,6 +2371,7 @@ function toggleConfigSummary() {
 loadFromStorage();
 applyI18n();
 initTeamBuilder();
+renderPlayerPresetList();
 </script>
 
 </body>
