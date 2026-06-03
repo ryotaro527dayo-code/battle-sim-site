@@ -782,6 +782,7 @@ const I18N = {
     tormentStart: (name, pct) => `【${entity('skill_torment')}】${name}が発動！双方の被ダメ+${pct}%（永続）`,
     heavyWoundStart: (name) => `【${entity('skill_heavy_wound')}】${name}：最初の攻撃を回避する構え`,
     attackTalentStart: (name) => `【${entity('skill_attack_talent')}】${name}：攻撃レイジ+3/回`,
+    rapidStart: (name, speedUp, atkDown) => `【${entity('skill_rapid')}】${name}：速度+${speedUp}%・攻撃-${atkDown}%`,
     waverStart: (name) => `【${entity('skill_waver')}】${name}：最初3攻撃-10%、次3攻撃+15%`,
     winRate: (team, pct, name) => `${team}勝率: <span>${pct}%</span>（${name}）`,
     judgement: (team, wins, n) => `判定: <span style="color:var(--gold2);font-weight:700">${team}が優勢（${wins}/${n}勝）</span>`,
@@ -874,6 +875,7 @@ const I18N = {
     tormentStart: (name, pct) => `[${entity('skill_torment')}] ${name} activates! Both sides take +${pct}% damage permanently`,
     heavyWoundStart: (name) => `[${entity('skill_heavy_wound')}] ${name}: ready to dodge the first attack`,
     attackTalentStart: (name) => `[${entity('skill_attack_talent')}] ${name}: attack rage +3/action`,
+    rapidStart: (name, speedUp, atkDown) => `[${entity('skill_rapid')}] ${name}: speed +${speedUp}%, attack -${atkDown}%`,
     waverStart: (name) => `[${entity('skill_waver')}] ${name}: first 3 attacks -10%, next 3 attacks +15%`,
     winRate: (team, pct, name) => `${team} win rate: <span>${pct}%</span> (${name})`,
     judgement: (team, wins, n) => `Result: <span style="color:var(--gold2);font-weight:700">${team} is favored (${wins}/${n} wins)</span>`,
@@ -966,6 +968,7 @@ const I18N = {
     tormentStart: (name, pct) => `[${entity('skill_torment')}] ${name} активирует! Обе стороны получают +${pct}% урона навсегда`,
     heavyWoundStart: (name) => `[${entity('skill_heavy_wound')}] ${name}: готов уклониться от первой атаки`,
     attackTalentStart: (name) => `[${entity('skill_attack_talent')}] ${name}: ярость атаки +3/ход`,
+    rapidStart: (name, speedUp, atkDown) => `[${entity('skill_rapid')}] ${name}: скорость +${speedUp}%, атака -${atkDown}%`,
     waverStart: (name) => `[${entity('skill_waver')}] ${name}: первые 3 атаки -10%, следующие 3 +15%`,
     winRate: (team, pct, name) => `Шанс победы ${team}: <span>${pct}%</span> (${name})`,
     judgement: (team, wins, n) => `Итог: <span style="color:var(--gold2);font-weight:700">${team} имеет преимущество (${wins}/${n} побед)</span>`,
@@ -1058,6 +1061,7 @@ const I18N = {
     tormentStart: (name, pct) => `【${entity('skill_torment')}】${name}发动！双方受到伤害+${pct}%（永久）`,
     heavyWoundStart: (name) => `【${entity('skill_heavy_wound')}】${name}: 准备闪避首次攻击`,
     attackTalentStart: (name) => `【${entity('skill_attack_talent')}】${name}: 攻击怒气+3/次`,
+    rapidStart: (name, speedUp, atkDown) => `【${entity('skill_rapid')}】${name}: 速度+${speedUp}%・攻击-${atkDown}%`,
     waverStart: (name) => `【${entity('skill_waver')}】${name}: 前3次攻击-10%，后3次+15%`,
     winRate: (team, pct, name) => `${team}胜率: <span>${pct}%</span>（${name}）`,
     judgement: (team, wins, n) => `判定: <span style="color:var(--gold2);font-weight:700">${team}占优（${wins}/${n}胜）</span>`,
@@ -1081,6 +1085,7 @@ const ENTITY_I18N = {
   kibarra_rex_50: { en: 'Yellowspike Rex', ru: 'Желтошипый Рекс', zh: '黄棘雷克斯' },
   kibarra_rex: { en: 'Yellowspike Rex', ru: 'Желтошипый Рекс', zh: '黄棘雷克斯' },
   mini_rex: { en: 'Mini Rex', ru: 'Мини Рекс', zh: '迷你雷克斯' },
+  velociraptor: { ja: 'ヴェロキラプトル', en: 'Velociraptor', ru: 'Велоцираптор', zh: '迅猛龙' },
   tyrannorex: { en: 'Tyranno Rex', ru: 'Тиранно Рекс', zh: '暴王雷克斯' },
   white_saber: { en: 'White Saber', ru: 'Белый Саблезуб', zh: '白色剑齿兽' },
   k_kong: { en: 'Mighty Kong (K)', ru: 'Могучий Конг (K)', zh: '怪力金刚(K)' },
@@ -1104,6 +1109,7 @@ const ENTITY_I18N = {
   skill_drain: { ja: '攻撃-吸血', en: 'Attack - Life Drain', ru: 'Атака - Вампиризм', zh: '攻击-吸血' },
   skill_purify: { ja: '防御-浄化術', en: 'Defense - Purify', ru: 'Защита - Очищение', zh: '防御-净化术' },
   skill_hunter_mark: { ja: 'パッシブ-狩人の印', en: "Passive - Hunter's Mark", ru: 'Пассив - Метка охотника', zh: '被动-猎人印记' },
+  skill_rapid: { ja: '戦吼-急速', en: 'Battlecry - Rapid', ru: 'Боевой клич - Ускорение', zh: '战吼-急速' },
   skill_attack_talent: { ja: '戦吼-攻撃タレント', en: 'Battlecry - Attack Talent', ru: 'Боевой клич - Талант атаки', zh: '战吼-攻击天赋' },
   param_combo: { ja: '2回目倍率', en: 'Second hit ratio', ru: 'Множитель 2-го удара', zh: '第二击倍率' },
   param_wild: { ja: 'HP10%毎ATK増', en: 'ATK per 10% HP lost', ru: 'ATK за каждые 10% HP', zh: '每损失10%HP攻击提升' },
@@ -1118,6 +1124,9 @@ const ENTITY_I18N = {
   param_torment: { ja: '双方被ダメ増', en: 'Both damage taken increase', ru: 'Урон по обеим сторонам', zh: '双方受伤增加' },
   param_breakthrough: { ja: 'レイジ減少量', en: 'Rage reduction', ru: 'Снижение ярости', zh: '怒气减少量' },
   param_hunter_mark: { ja: '+ダメ/スタック', en: '+damage/stack', ru: '+урон/стак', zh: '+伤害/层' },
+  param_hunter_mark_max: { ja: '最大追加ダメージ', en: 'Max bonus damage', ru: 'Макс. бонус урона', zh: '最大追加伤害' },
+  param_rapid_speed: { ja: '速度UP', en: 'Speed up', ru: 'Скорость +', zh: '速度提升' },
+  param_rapid_atk_down: { ja: '攻撃DOWN', en: 'Attack down', ru: 'Атака -', zh: '攻击降低' },
   param_attack_talent: { ja: '攻撃レイジ+', en: 'Attack rage +', ru: 'Ярость атаки +', zh: '攻击怒气+' },
   param_purify: { ja: 'HP回復/スタック', en: 'HP recovery/stack', ru: 'HP за стак', zh: 'HP恢复/层' },
   param_undying: { ja: 'HP回復率(致死)', en: 'HP recovery on lethal', ru: 'HP при смертельном ударе', zh: '致命时HP恢复率' },
@@ -1361,7 +1370,8 @@ const PARAM_INFO = {
   heavy_wound:   { param: ['param_heavy_wound',   true,  0.20] },
   torment:       { param: ['param_torment',       true,  0.25] },
   breakthrough:  { param: ['param_breakthrough',  false, 13  ] },
-  hunter_mark:   { param: ['param_hunter_mark',   false, 9   ] },
+  hunter_mark:   { param: ['param_hunter_mark',   false, 9   ], param2: ['param_hunter_mark_max', false, 90] },
+  rapid:         { param: ['param_rapid_speed',   true,  0.03], param2: ['param_rapid_atk_down', true, 0.02] },
   attack_talent: { param: ['param_attack_talent', false, 3   ] },
   purify:        { param: ['param_purify',        false, 5   ] },
   undying:       { param: ['param_undying',       true,  0.05] },
@@ -1499,6 +1509,15 @@ const CHARS = {
       { name: '防御-荊棘外殻', type: 'defense', rageCost: 40, effect: 'thorns', param: 0.20, desc: '被ダメの20%反射' }
     ]
   },
+  velociraptor: {
+    id: 'velociraptor', name: 'ヴェロキラプトル', lv: 16, stars: 3, team: 'enemy',
+    dur: 249, atk: 126, agi: 130, will: 109,
+    skills: [
+      { name: '攻撃-吸血', type: 'attack', rageCost: 20, effect: 'drain', param: 0.10, desc: '与ダメの10%HP回復' },
+      { name: '戦吼-急速', type: 'battlecry', effect: 'rapid', param: 0.03, param2: 0.02, desc: '速度+3%・攻撃力-2%' },
+      { name: 'パッシブ-狩人の印', type: 'passive', effect: 'hunter_mark', param: 3, param2: 30, desc: '攻撃ごとに+3ダメ累積(最大+30)' }
+    ]
+  },
   tyrannorex: {
     id: 'tyrannorex', name: '暴王レックス', lv: 66, stars: 5, team: 'enemy',
     dur: 493, atk: 248, agi: 247, will: 170,
@@ -1588,6 +1607,7 @@ class Fighter {
     this.agiDebuffAttacksLeft = 0;
     this.agiDebuffAmount = 0;
     this.attackRageBonus = 0;
+    this.rapidAtkPenalty = 0;
     this.hunterMarkBonus = 0;
     this.lacerateTurns = 0;
     this.lacerateParam = 0;
@@ -1610,6 +1630,11 @@ class Fighter {
     }
     if (bc.effect === 'attack_talent') {
       this.attackRageBonus = getParam(this.data.id, 'attack_talent', 'param', bc.param || 3);
+    }
+    if (bc.effect === 'rapid') {
+      const speedUp = getParam(this.data.id, 'rapid', 'param', bc.param || 0.03);
+      this.agi = Math.max(1, Math.round(this.agi * (1 + speedUp)));
+      this.rapidAtkPenalty = getParam(this.data.id, 'rapid', 'param2', bc.param2 || 0.02);
     }
     // torment は applyTorment() で両者に適用するためここでは処理しない
     // waver は動的に処理
@@ -1637,6 +1662,9 @@ class Fighter {
       const stacks = Math.floor((1 - this.hp / this.maxHP) * 10);
       mult *= (1 + stacks * getParam(this.data.id, 'wild_weak', 'param', wildWeakSkill.param || 0.03));
     }
+
+    // 戦吼-急速: 速度上昇の代わりに攻撃力DOWN
+    if (this.rapidAtkPenalty) mult *= (1 - this.rapidAtkPenalty);
 
     // 戦吼-動揺
     if (this.hasBattleCry('waver')) {
@@ -1782,7 +1810,10 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       push('log-debuff', t('thornsReflect', fighterName(def), fighterName(atk), reflectDmg, atk.hp));
     }
     if (atk.hasPassive('hunter_mark')) {
-      atk.hunterMarkBonus = Math.min(90, atk.hunterMarkBonus + 9);
+      const markSkill = atk.data.skills.find(s => s.type === 'passive' && s.effect === 'hunter_mark');
+      const markStep = getParam(atk.data.id, 'hunter_mark', 'param', markSkill?.param || 9);
+      const markMax = getParam(atk.data.id, 'hunter_mark', 'param2', markSkill?.param2 || markStep * 10);
+      atk.hunterMarkBonus = Math.min(markMax, atk.hunterMarkBonus + markStep);
     }
     // 通常攻撃のみレイジ増加（レイジスキル使用時・交代直後は増加しない）
     if (!atkSkill && !noRageGain) {
@@ -1836,7 +1867,12 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           checkUndying(comboTarget);
           // 連撃の追加打は通常攻撃扱い: 速度・レイジに影響しない
           atk.attackCount++;
-          if (atk.hasPassive('hunter_mark')) atk.hunterMarkBonus = Math.min(90, atk.hunterMarkBonus + 9);
+          if (atk.hasPassive('hunter_mark')) {
+            const markSkill = atk.data.skills.find(s => s.type === 'passive' && s.effect === 'hunter_mark');
+            const markStep = getParam(atk.data.id, 'hunter_mark', 'param', markSkill?.param || 9);
+            const markMax = getParam(atk.data.id, 'hunter_mark', 'param2', markSkill?.param2 || markStep * 10);
+            atk.hunterMarkBonus = Math.min(markMax, atk.hunterMarkBonus + markStep);
+          }
           const carryLog = comboCarryOver ? t('carryOver', fighterName(comboTarget)) : '';
           push('log-skill', t('comboHit', comboDmg, carryLog, fighterName(comboTarget), comboTarget.hp));
         }
@@ -1929,6 +1965,14 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     if (b.firstDodge) push('log-buff', t('heavyWoundStart', fighterName(b)));
     if (a.hasBattleCry('attack_talent')) push('log-buff', t('attackTalentStart', fighterName(a)));
     if (b.hasBattleCry('attack_talent')) push('log-buff', t('attackTalentStart', fighterName(b)));
+    if (a.hasBattleCry('rapid')) {
+      const s = a.data.skills.find(skill => skill.effect === 'rapid');
+      push('log-buff', t('rapidStart', fighterName(a), Math.round(getParam(a.data.id, 'rapid', 'param', s?.param || 0.03) * 100), Math.round(getParam(a.data.id, 'rapid', 'param2', s?.param2 || 0.02) * 100)));
+    }
+    if (b.hasBattleCry('rapid')) {
+      const s = b.data.skills.find(skill => skill.effect === 'rapid');
+      push('log-buff', t('rapidStart', fighterName(b), Math.round(getParam(b.data.id, 'rapid', 'param', s?.param || 0.03) * 100), Math.round(getParam(b.data.id, 'rapid', 'param2', s?.param2 || 0.02) * 100)));
+    }
     if (a.hasBattleCry('waver')) push('log-buff', t('waverStart', fighterName(a)));
     if (b.hasBattleCry('waver')) push('log-buff', t('waverStart', fighterName(b)));
   };
@@ -2009,7 +2053,7 @@ const TEAM_SEL = {
 function buildCharOptions() {
   const ids = [
     'kong','dark_rex','young_rex',
-    'kibarra_rex_50','kibarra_rex','mini_rex','white_saber','tyrannorex','mineral_rex','golden_rex','ice_ptera',
+    'kibarra_rex_50','kibarra_rex','mini_rex','velociraptor','white_saber','tyrannorex','mineral_rex','golden_rex','ice_ptera',
     'k_kong','k_kong_100','k_tyrex','gigant'
   ];
   const seen = new Set();
