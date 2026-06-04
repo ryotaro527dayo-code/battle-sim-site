@@ -1904,29 +1904,33 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     atk.suppressRageGain = false;
     actionHadCarryover = false;
 
-    // === 防御スキル（反応型）: 攻撃を受ける側がレイジ消費して発動 ===
+  const activateDefenseSkill = (def) => {
     const defReactSkill = def.getActiveDefenseSkill();
-    if (defReactSkill) {
-      const rc = getParam(def.data, defReactSkill.effect, 'rageCost', defReactSkill.rageCost || 0);
-      def.defRage -= rc;
-      if (defReactSkill.effect === 'harden') {
-        def.hardenReady = true;
-        def.hardenParam = getParam(def.data, 'harden', 'param', defReactSkill.param || 0.20);
-        push('log-skill', t('hardenUse', fighterName(def), skillName(defReactSkill), Math.round(def.hardenParam*100)));
-      } else if (defReactSkill.effect === 'thorns') {
-        def.thornsReady = true;
-        def.thornsParam = getParam(def.data, 'thorns', 'param', defReactSkill.param || 0.20);
-        push('log-skill', t('thornsUse', fighterName(def), skillName(defReactSkill), Math.round(def.thornsParam*100)));
-      } else if (defReactSkill.effect === 'purify') {
-        let removed = 0;
-        if (def.damageBonusTurns > 0) { def.damageBonusTurns = Math.max(0, def.damageBonusTurns - 2); removed++; }
-        if (def.agiDebuffAttacksLeft > 0) { def.agiDebuffAttacksLeft = Math.max(0, def.agiDebuffAttacksLeft - 2); removed++; }
-        if (def.lacerateTurns > 0) { def.lacerateTurns = Math.max(0, def.lacerateTurns - 2); removed++; }
-        const heal = Math.min(removed * 2, 2) * getParam(def.data, 'purify', 'param', defReactSkill.param || 5);
-        if (heal > 0) def.hp = Math.min(def.maxHP, def.hp + heal);
-        push('log-buff', t('purifyUse', fighterName(def), skillName(defReactSkill), Math.min(removed*2,2), heal));
-      }
+    if (!defReactSkill) return;
+
+    const rc = getParam(def.data, defReactSkill.effect, 'rageCost', defReactSkill.rageCost || 0);
+    def.defRage -= rc;
+    if (defReactSkill.effect === 'harden') {
+      def.hardenReady = true;
+      def.hardenParam = getParam(def.data, 'harden', 'param', defReactSkill.param || 0.20);
+      push('log-skill', t('hardenUse', fighterName(def), skillName(defReactSkill), Math.round(def.hardenParam*100)));
+    } else if (defReactSkill.effect === 'thorns') {
+      def.thornsReady = true;
+      def.thornsParam = getParam(def.data, 'thorns', 'param', defReactSkill.param || 0.20);
+      push('log-skill', t('thornsUse', fighterName(def), skillName(defReactSkill), Math.round(def.thornsParam*100)));
+    } else if (defReactSkill.effect === 'purify') {
+      let removed = 0;
+      if (def.damageBonusTurns > 0) { def.damageBonusTurns = Math.max(0, def.damageBonusTurns - 2); removed++; }
+      if (def.agiDebuffAttacksLeft > 0) { def.agiDebuffAttacksLeft = Math.max(0, def.agiDebuffAttacksLeft - 2); removed++; }
+      if (def.lacerateTurns > 0) { def.lacerateTurns = Math.max(0, def.lacerateTurns - 2); removed++; }
+      const heal = Math.min(removed * 2, 2) * getParam(def.data, 'purify', 'param', defReactSkill.param || 5);
+      if (heal > 0) def.hp = Math.min(def.maxHP, def.hp + heal);
+      push('log-buff', t('purifyUse', fighterName(def), skillName(defReactSkill), Math.min(removed*2,2), heal));
     }
+  };
+
+    // === 防御スキル（反応型）: 攻撃を受ける側がレイジ消費して発動 ===
+    activateDefenseSkill(def);
 
     // スキル抑制: 交代直後 or 敵が回避持ち（firstDodge）の場合は通常攻撃を優先
     const skipByDodge = def.firstDodge;
@@ -2049,7 +2053,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     if (atkSkill) {
       if (atkSkill.effect === 'combo') {
         // 連撃: メイン攻撃後に追加打
-        // 注意: hardenはメイン攻撃のみに適用されるため、comboMult は harden なしで再計算
+        // 連撃2発目も防御スキルを判定し、硬化はこの追加打にも適用する
         const comboRatio = getParam(atk.data, 'combo', 'param', atkSkill.param || 0.60);
         const comboVariance = 0.95 + Math.random() * 0.10;
 
@@ -2061,6 +2065,9 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           comboCarryOver = true;
           actionHadCarryover = true;
         }
+
+        // 連撃2発目も、着弾前に防御スキルを判定する
+        if (comboTarget.hp > 0) activateDefenseSkill(comboTarget);
 
         // キャリーオーバー時も回避・不屈の魂は通常通り適用
         if (comboCarryOver && comboTarget.firstDodge) {
@@ -2075,10 +2082,21 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
             comboDamageBonusConsumed = comboTarget !== def;
           }
           comboMult += comboTarget.tormentBonus;
+          if (comboTarget.hardenReady) {
+            comboMult = Math.max(0, comboMult - (comboTarget.hardenParam || 0.20));
+            comboTarget.hardenReady = false;
+            push('log-buff', t('hardenTriggered', fighterName(comboTarget)));
+          }
           const comboDmg = Math.round(baseATK * comboRatio * comboVariance * comboMult);
           comboTarget.hp = Math.max(0, comboTarget.hp - comboDmg);
           checkUndying(comboTarget);
-          // 連撃の追加打は通常攻撃扱い: 速度・レイジに影響しない
+          if (comboTarget.thornsReady) {
+            const comboReflectDmg = Math.round(comboDmg * comboTarget.thornsParam);
+            atk.hp = Math.max(0, atk.hp - comboReflectDmg);
+            comboTarget.thornsReady = false;
+            push('log-debuff', t('thornsReflect', fighterName(comboTarget), fighterName(atk), comboReflectDmg, atk.hp));
+          }
+          // 連撃の追加打は防御判定あり、速度・レイジに影響しない
           atk.attackCount++;
           if (atk.hasPassive('hunter_mark')) {
             const markSkill = atk.data.skills.find(s => s.type === 'passive' && s.effect === 'hunter_mark');
