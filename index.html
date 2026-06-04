@@ -630,7 +630,7 @@
 <p class="subtitle" data-i18n="subtitle">サベージサバイバル 恐竜の咆哮 | 戦闘予測ツール</p>
 
 <div class="settings">
-  <span style="color:var(--text-dim);font-size:0.85rem" data-i18n="rageFormula">レイジ獲得量: 戦意 × 0.268（キャラごとに自動計算）</span>
+  <span style="color:var(--text-dim);font-size:0.85rem" data-i18n="rageFormula">レイジ獲得量: 戦意 × 0.267（キャラごとに自動計算）</span>
 </div>
 
 <div class="teams-area">
@@ -724,7 +724,7 @@ const I18N = {
     language: '言語',
     appTitle: '猛獣バトルシミュレーター',
     subtitle: 'サベージサバイバル 恐竜の咆哮 | 戦闘予測ツール',
-    rageFormula: 'レイジ獲得量: 戦意 × 0.268（キャラごとに自動計算）',
+    rageFormula: 'レイジ獲得量: 戦意 × 0.267（キャラごとに自動計算）',
     teamAOwn: 'チームA（自分）',
     teamBEnemy: 'チームB（相手）',
     startBattle: '戦闘開始',
@@ -827,7 +827,7 @@ const I18N = {
     language: 'Language',
     appTitle: 'Beast Battle Simulator',
     subtitle: 'Savage Survival: Dinosaur Roar | Battle prediction tool',
-    rageFormula: 'Rage gain: Will × 0.268 (calculated per character)',
+    rageFormula: 'Rage gain: Will × 0.267 (calculated per character)',
     teamAOwn: 'Team A (You)',
     teamBEnemy: 'Team B (Opponent)',
     startBattle: 'Start Battle',
@@ -930,7 +930,7 @@ const I18N = {
     language: 'Язык',
     appTitle: 'Симулятор битвы зверей',
     subtitle: 'Savage Survival: Roar of Dinosaurs | Прогноз боя',
-    rageFormula: 'Ярость: воля × 0.268 (расчет для каждого бойца)',
+    rageFormula: 'Ярость: воля × 0.267 (расчет для каждого бойца)',
     teamAOwn: 'Команда A (вы)',
     teamBEnemy: 'Команда B (соперник)',
     startBattle: 'Начать бой',
@@ -1033,7 +1033,7 @@ const I18N = {
     language: '语言',
     appTitle: '猛兽战斗模拟器',
     subtitle: 'Savage Survival: 恐龙咆哮 | 战斗预测工具',
-    rageFormula: '怒气获取量: 意志 × 0.268（按角色自动计算）',
+    rageFormula: '怒气获取量: 意志 × 0.267（按角色自动计算）',
     teamAOwn: '队伍A（我方）',
     teamBEnemy: '队伍B（对手）',
     startBattle: '开始战斗',
@@ -1986,7 +1986,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     // ダメージ適用
     def.hp = Math.max(0, def.hp - dmg);
     checkUndying(def);
-    const defRageGain = Math.max(0, Math.round(def.will * 0.268) - (def.hasBattleCry('attack_talent') ? getParam(def.data, 'attack_talent', 'param', 3) : 0));
+    const defRageGain = Math.max(0, Math.floor(def.will * 0.267) - (def.hasBattleCry('attack_talent') ? getParam(def.data, 'attack_talent', 'param', 3) : 0));
     def.defRage = Math.min(def.maxRage, def.defRage + defRageGain);
     if (def.thornsReady) {
       const reflectDmg = Math.round(dmg * def.thornsParam);
@@ -2002,7 +2002,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     }
     // 通常攻撃のみレイジ増加（レイジスキル使用時・回避でダメージなしの場合は増加しない）
     if (!atkSkill && !noRageGain) {
-      const rageGain = Math.round(atk.will * 0.268) + atk.attackRageBonus;
+      const rageGain = Math.floor(atk.will * 0.267) + atk.attackRageBonus;
       atk.atkRage = Math.min(atk.maxRage, atk.atkRage + rageGain);
     }
     atk.attackCount++;
@@ -2573,7 +2573,7 @@ function toggleConfigSummary() {
     let html = `<div class="config-team-title">${label}</div>`;
     team.forEach(c => {
       const hp = c.dur * 4;
-      const rageGain = Math.round(c.will * 0.268);
+      const rageGain = Math.floor(c.will * 0.267);
       let skillRows = '';
       c.skills.forEach(s => {
         const info = PARAM_INFO[s.effect] || {};
