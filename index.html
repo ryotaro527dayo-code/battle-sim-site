@@ -2064,6 +2064,8 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           comboTarget = defTeam[defIdx + 1];
           comboCarryOver = true;
           actionHadCarryover = true;
+          applyTorment(atk, comboTarget);
+          comboTarget.entryEffectsAppliedByCarryover = true;
         }
 
         // 連撃2発目も、着弾前に防御スキルを判定する
@@ -2252,12 +2254,20 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
         idxB++;
         if (idxB >= teamB.length) { winningTeam = 'A'; break; }
         push('log-buff', t('joins', t('teamB'), fighterName(teamB[idxB]), teamB[idxB].maxHP));
-        applyTorment(teamA[idxA], teamB[idxB]);
+        if (teamB[idxB].entryEffectsAppliedByCarryover) {
+          teamB[idxB].entryEffectsAppliedByCarryover = false;
+        } else {
+          applyTorment(teamA[idxA], teamB[idxB]);
+        }
       } else {
         idxA++;
         if (idxA >= teamA.length) { winningTeam = 'B'; break; }
         push('log-buff', t('joins', t('teamA'), fighterName(teamA[idxA]), teamA[idxA].maxHP));
-        applyTorment(teamA[idxA], teamB[idxB]);
+        if (teamA[idxA].entryEffectsAppliedByCarryover) {
+          teamA[idxA].entryEffectsAppliedByCarryover = false;
+        } else {
+          applyTorment(teamA[idxA], teamB[idxB]);
+        }
       }
 
       // 交代処理: CTBリセット。通常攻撃なら交代直後でもレイジは増加する。
