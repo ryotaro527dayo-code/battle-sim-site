@@ -1923,6 +1923,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     const baseATK = atk.getATK() + (atk.hunterMarkBonus || 0);
     const variance = 0.95 + Math.random() * 0.10;
     let dmg = Math.round(baseATK * variance);
+    let damageBonusConsumed = false;
 
     // 大地震撼: メイン攻撃を140%に強化
     if (atkSkill?.effect === 'quake') {
@@ -1932,7 +1933,10 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
 
     // 被ダメ補正
     let dmgMult = 1.0;
-    if (def.damageBonusTurns > 0) dmgMult += def.damageBonusPercent;
+    if (def.damageBonusTurns > 0) {
+      dmgMult += def.damageBonusPercent;
+      damageBonusConsumed = true;
+    }
     dmgMult += def.tormentBonus; // 折磨: 被弾側の永続デバフ
     if (def.hardenReady) {
       dmgMult = Math.max(0, dmgMult - (def.hardenParam || 0.20));
@@ -2022,7 +2026,11 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           push('log-dodge', t('comboDodge', fighterName(comboTarget), Math.round(comboTarget.damageBonusPercent*100)));
         } else {
           let comboMult = 1.0;
-          if (comboTarget.damageBonusTurns > 0) comboMult += comboTarget.damageBonusPercent;
+          let comboDamageBonusConsumed = false;
+          if (comboTarget.damageBonusTurns > 0) {
+            comboMult += comboTarget.damageBonusPercent;
+            comboDamageBonusConsumed = comboTarget !== def;
+          }
           comboMult += comboTarget.tormentBonus;
           const comboDmg = Math.round(baseATK * comboRatio * comboVariance * comboMult);
           comboTarget.hp = Math.max(0, comboTarget.hp - comboDmg);
@@ -2037,6 +2045,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           }
           const carryLog = comboCarryOver ? t('carryOver', fighterName(comboTarget)) : '';
           push('log-skill', t('comboHit', comboDmg, carryLog, fighterName(comboTarget), comboTarget.hp));
+          if (comboDamageBonusConsumed) comboTarget.damageBonusTurns = Math.max(0, comboTarget.damageBonusTurns - 1);
         }
       } else if (atkSkill.effect === 'slow') {
         const slowRate = getParam(atk.data, 'slow', 'param', atkSkill.param || 0.12);
@@ -2077,6 +2086,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       }
     }
 
+    if (damageBonusConsumed) def.damageBonusTurns = Math.max(0, def.damageBonusTurns - 1);
     return def.hp <= 0;
   };
 
@@ -2190,9 +2200,6 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       snap();
       continue;
     }
-
-    if (a.damageBonusTurns > 0) a.damageBonusTurns--;
-    if (b.damageBonusTurns > 0) b.damageBonusTurns--;
   }
 
   if (!winningTeam) {
