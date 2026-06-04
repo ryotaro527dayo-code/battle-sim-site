@@ -776,6 +776,9 @@ const I18N = {
     battleStart: '━━━━━ 6v6 戦闘開始 ━━━━━',
     matchup: (a, b) => `── ${a} vs ${b} ──`,
     action: (name) => `── ${name}の行動 ──`,
+    rageTrace: (phase, aName, aAtk, aDef, bName, bAtk, bDef) => `   └ ${phase}レイジ: A ${aName} 攻${aAtk}/防${aDef} | B ${bName} 攻${bAtk}/防${bDef}`,
+    beforeAction: '行動前',
+    afterAction: '行動後',
     defeated: (name) => `💀 ${name} 撃破！`,
     defeatedDetail: (winner, winnerHp, winnerMax, loser, loserHp, loserMax) => `   └ 撃破時HP: ${winner} ${winnerHp}/${winnerMax} / ${loser} ${loserHp}/${loserMax}`,
     joins: (team, name, hp) => `⚡ ${team}: ${name} 参戦！ (HP:${hp})`,
@@ -876,6 +879,9 @@ const I18N = {
     battleStart: '━━━━━ 6v6 Battle Start ━━━━━',
     matchup: (a, b) => `── ${a} vs ${b} ──`,
     action: (name) => `── ${name}'s action ──`,
+    rageTrace: (phase, aName, aAtk, aDef, bName, bAtk, bDef) => `   └ ${phase} rage: A ${aName} Atk${aAtk}/Def${aDef} | B ${bName} Atk${bAtk}/Def${bDef}`,
+    beforeAction: 'Before',
+    afterAction: 'After',
     defeated: (name) => `💀 ${name} defeated!`,
     defeatedDetail: (winner, winnerHp, winnerMax, loser, loserHp, loserMax) => `   └ HP at defeat: ${winner} ${winnerHp}/${winnerMax} / ${loser} ${loserHp}/${loserMax}`,
     joins: (team, name, hp) => `⚡ ${team}: ${name} enters! (HP:${hp})`,
@@ -976,6 +982,9 @@ const I18N = {
     battleStart: '━━━━━ Старт боя 6v6 ━━━━━',
     matchup: (a, b) => `── ${a} vs ${b} ──`,
     action: (name) => `── Ход: ${name} ──`,
+    rageTrace: (phase, aName, aAtk, aDef, bName, bAtk, bDef) => `   └ Ярость ${phase}: A ${aName} Атк${aAtk}/Защ${aDef} | B ${bName} Атк${bAtk}/Защ${bDef}`,
+    beforeAction: 'до хода',
+    afterAction: 'после хода',
     defeated: (name) => `💀 ${name} побежден!`,
     defeatedDetail: (winner, winnerHp, winnerMax, loser, loserHp, loserMax) => `   └ HP при победе: ${winner} ${winnerHp}/${winnerMax} / ${loser} ${loserHp}/${loserMax}`,
     joins: (team, name, hp) => `⚡ ${team}: ${name} вступает! (HP:${hp})`,
@@ -1076,6 +1085,9 @@ const I18N = {
     battleStart: '━━━━━ 6v6 战斗开始 ━━━━━',
     matchup: (a, b) => `── ${a} vs ${b} ──`,
     action: (name) => `── ${name}的行动 ──`,
+    rageTrace: (phase, aName, aAtk, aDef, bName, bAtk, bDef) => `   └ ${phase}怒气: A ${aName} 攻${aAtk}/防${aDef} | B ${bName} 攻${bAtk}/防${bDef}`,
+    beforeAction: '行动前',
+    afterAction: '行动后',
     defeated: (name) => `💀 ${name} 被击败！`,
     defeatedDetail: (winner, winnerHp, winnerMax, loser, loserHp, loserMax) => `   └ 击败时HP: ${winner} ${winnerHp}/${winnerMax} / ${loser} ${loserHp}/${loserMax}`,
     joins: (team, name, hp) => `⚡ ${team}: ${name} 参战！ (HP:${hp})`,
@@ -1865,6 +1877,12 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
 
   const log = [];
   const push = (cls, msg) => { if (verbose) log.push({ cls, msg }); };
+  const pushRageTrace = (phaseKey, left, right) => {
+    push('log-start', t('rageTrace',
+      t(phaseKey), fighterName(left), left.atkRage, left.defRage,
+      fighterName(right), right.atkRage, right.defRage
+    ));
+  };
   let actionHadCarryover = false;
 
   const checkUndying = (target) => {
@@ -2169,9 +2187,11 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     if (isActorA) chargeA = 0; else chargeB = 0;
 
     push('log-turn', t('action', fighterName(actor)));
+    pushRageTrace('beforeAction', a, b);
     const defTeam = isActorA ? teamB : teamA;
     const defIdx  = isActorA ? idxB  : idxA;
     const killed = doAttack(actor, defender, defTeam, defIdx);
+    pushRageTrace('afterAction', a, b);
     snap();
 
     if (killed || defender.hp <= 0) {
