@@ -1993,8 +1993,11 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     // ダメージ適用
     def.hp = Math.max(0, def.hp - dmg);
     checkUndying(def);
-    const defRageGain = Math.max(0, Math.round(def.will * 0.2649) - (def.hasBattleCry('attack_talent') ? getParam(def.data, 'attack_talent', 'param', 3) : 0));
-    def.defRage = Math.min(def.maxRage, def.defRage + defRageGain);
+    // 防御レイジ増加は通常攻撃を受けたときのみ（攻撃スキルのメインヒットでは増加しない）
+    if (!atkSkill) {
+      const defRageGain = Math.max(0, Math.round(def.will * 0.2649) - (def.hasBattleCry('attack_talent') ? getParam(def.data, 'attack_talent', 'param', 3) : 0));
+      def.defRage = Math.min(def.maxRage, def.defRage + defRageGain);
+    }
     if (def.thornsReady) {
       const reflectDmg = Math.round(dmg * def.thornsParam);
       atk.hp = Math.max(0, atk.hp - reflectDmg);
