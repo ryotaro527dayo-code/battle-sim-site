@@ -1951,7 +1951,6 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     const variance = 0.95 + Math.random() * 0.10;
     let dmg = Math.round(baseATK * variance);
     let quakeNormalDmg = 0;
-    let damageBonusConsumed = false;
 
     // 大地震撼: スキル倍率ダメージの後、通常攻撃分を追加で与える
     if (atkSkill?.effect === 'quake') {
@@ -1964,7 +1963,6 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     let dmgMult = 1.0;
     if (def.damageBonusTurns > 0) {
       dmgMult += def.damageBonusPercent;
-      damageBonusConsumed = true;
     }
     dmgMult += def.tormentBonus; // 折磨: 被弾側の永続デバフ
     if (def.hardenReady && atkSkill?.effect !== 'quake') {
@@ -1988,6 +1986,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       def.firstDodge = false;
       def.damageBonusTurns = 3;
       atk.attackCount++;
+      if (atk.damageBonusTurns > 0) atk.damageBonusTurns = Math.max(0, atk.damageBonusTurns - 1);
       push('log-dodge', t('dodge', fighterName(def), Math.round(def.damageBonusPercent*100)));
       return false;
     }
@@ -2028,6 +2027,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       atk.atkRage = Math.min(atk.maxRage, atk.atkRage + rageGain);
     }
     atk.attackCount++;
+    if (atk.damageBonusTurns > 0) atk.damageBonusTurns = Math.max(0, atk.damageBonusTurns - 1);
     if (atk.agiDebuffAttacksLeft > 0) {
       atk.agiDebuffAttacksLeft--;
       if (atk.agiDebuffAttacksLeft === 0) {
@@ -2074,12 +2074,12 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           comboTarget.firstDodge = false;
           comboTarget.damageBonusTurns = 3;
           push('log-dodge', t('comboDodge', fighterName(comboTarget), Math.round(comboTarget.damageBonusPercent*100)));
+          atk.attackCount++;
+          if (atk.damageBonusTurns > 0) atk.damageBonusTurns = Math.max(0, atk.damageBonusTurns - 1);
         } else {
           let comboMult = 1.0;
-          let comboDamageBonusConsumed = false;
           if (comboTarget.damageBonusTurns > 0) {
             comboMult += comboTarget.damageBonusPercent;
-            comboDamageBonusConsumed = comboTarget !== def;
           }
           comboMult += comboTarget.tormentBonus;
           if (comboTarget.hardenReady) {
@@ -2096,8 +2096,9 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
             comboTarget.thornsReady = false;
             push('log-debuff', t('thornsReflect', fighterName(comboTarget), fighterName(atk), comboReflectDmg, atk.hp));
           }
-          // 連撃の追加打は防御判定あり、速度・レイジに影響しない
+          // 連撃の追加打は防御判定あり、レイジに影響しない
           atk.attackCount++;
+          if (atk.damageBonusTurns > 0) atk.damageBonusTurns = Math.max(0, atk.damageBonusTurns - 1);
           if (atk.hasPassive('hunter_mark')) {
             const markSkill = atk.data.skills.find(s => s.type === 'passive' && s.effect === 'hunter_mark');
             const markStep = getParam(atk.data, 'hunter_mark', 'param', markSkill?.param || 9);
@@ -2106,7 +2107,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           }
           const carryLog = comboCarryOver ? t('carryOver', fighterName(comboTarget)) : '';
           push('log-skill', t('comboHit', comboDmg, carryLog, fighterName(comboTarget), comboTarget.hp));
-          if (comboDamageBonusConsumed) comboTarget.damageBonusTurns = Math.max(0, comboTarget.damageBonusTurns - 1);
+
         }
       } else if (atkSkill.effect === 'slow') {
         const slowRate = getParam(atk.data, 'slow', 'param', atkSkill.param || 0.12);
@@ -2147,7 +2148,6 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       }
     }
 
-    if (damageBonusConsumed) def.damageBonusTurns = Math.max(0, def.damageBonusTurns - 1);
     return def.hp <= 0;
   };
 
