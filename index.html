@@ -777,6 +777,7 @@ const I18N = {
     matchup: (a, b) => `── ${a} vs ${b} ──`,
     action: (name) => `── ${name}の行動 ──`,
     defeated: (name) => `💀 ${name} 撃破！`,
+    defeatedDetail: (winner, winnerHp, winnerMax, loser, loserHp, loserMax) => `   └ 撃破時HP: ${winner} ${winnerHp}/${winnerMax} / ${loser} ${loserHp}/${loserMax}`,
     joins: (team, name, hp) => `⚡ ${team}: ${name} 参戦！ (HP:${hp})`,
     timeUp: (team) => `⏱️ 時間切れ！HP残量で${team}の勝利！`,
     teamWin: (team, aliveA, aliveB) => `🏆 ${team}の勝利！（A生存:${aliveA}体 / B生存:${aliveB}体）`,
@@ -876,6 +877,7 @@ const I18N = {
     matchup: (a, b) => `── ${a} vs ${b} ──`,
     action: (name) => `── ${name}'s action ──`,
     defeated: (name) => `💀 ${name} defeated!`,
+    defeatedDetail: (winner, winnerHp, winnerMax, loser, loserHp, loserMax) => `   └ HP at defeat: ${winner} ${winnerHp}/${winnerMax} / ${loser} ${loserHp}/${loserMax}`,
     joins: (team, name, hp) => `⚡ ${team}: ${name} enters! (HP:${hp})`,
     timeUp: (team) => `⏱️ Time up! ${team} wins by remaining HP!`,
     teamWin: (team, aliveA, aliveB) => `🏆 ${team} wins! (A alive:${aliveA} / B alive:${aliveB})`,
@@ -975,6 +977,7 @@ const I18N = {
     matchup: (a, b) => `── ${a} vs ${b} ──`,
     action: (name) => `── Ход: ${name} ──`,
     defeated: (name) => `💀 ${name} побежден!`,
+    defeatedDetail: (winner, winnerHp, winnerMax, loser, loserHp, loserMax) => `   └ HP при победе: ${winner} ${winnerHp}/${winnerMax} / ${loser} ${loserHp}/${loserMax}`,
     joins: (team, name, hp) => `⚡ ${team}: ${name} вступает! (HP:${hp})`,
     timeUp: (team) => `⏱️ Время вышло! ${team} побеждает по остаточному HP!`,
     teamWin: (team, aliveA, aliveB) => `🏆 Победа: ${team}! (A живы:${aliveA} / B живы:${aliveB})`,
@@ -1074,6 +1077,7 @@ const I18N = {
     matchup: (a, b) => `── ${a} vs ${b} ──`,
     action: (name) => `── ${name}的行动 ──`,
     defeated: (name) => `💀 ${name} 被击败！`,
+    defeatedDetail: (winner, winnerHp, winnerMax, loser, loserHp, loserMax) => `   └ 击败时HP: ${winner} ${winnerHp}/${winnerMax} / ${loser} ${loserHp}/${loserMax}`,
     joins: (team, name, hp) => `⚡ ${team}: ${name} 参战！ (HP:${hp})`,
     timeUp: (team) => `⏱️ 时间到！${team}以剩余HP获胜！`,
     teamWin: (team, aliveA, aliveB) => `🏆 ${team}胜利！（A存活:${aliveA} / B存活:${aliveB}）`,
@@ -2162,6 +2166,10 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
 
     if (killed || defender.hp <= 0) {
       push('log-winner', t('defeated', fighterName(defender)));
+      push('log-start', t('defeatedDetail',
+        fighterName(actor), Math.max(0, actor.hp), actor.maxHP,
+        fighterName(defender), Math.max(0, defender.hp), defender.maxHP
+      ));
 
       if (isActorA) {
         idxB++;
