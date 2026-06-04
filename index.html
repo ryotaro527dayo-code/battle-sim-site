@@ -1790,7 +1790,7 @@ class Fighter {
     this.tormentBonus = 0; // 折磨による被ダメ増加率（永続）
     this.undyingUsed = false;
     this.suppressNextSkill = false; // 交代後の最初の行動はスキル抑制
-    this.suppressRageGain = false;  // 交代後の最初の行動はレイジ増加抑制
+    this.suppressRageGain = false;  // 回避など、ダメージなし行動のレイジ増加抑制
 
     this.applyBattleCry();
   }
@@ -1999,7 +1999,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       const markMax = getParam(atk.data, 'hunter_mark', 'param2', markSkill?.param2 || markStep * 10);
       atk.hunterMarkBonus = Math.min(markMax, atk.hunterMarkBonus + markStep);
     }
-    // 通常攻撃のみレイジ増加（レイジスキル使用時・交代直後は増加しない）
+    // 通常攻撃のみレイジ増加（レイジスキル使用時・回避でダメージなしの場合は増加しない）
     if (!atkSkill && !noRageGain) {
       const rageGain = Math.round(atk.will * 0.268) + atk.attackRageBonus;
       atk.atkRage = Math.min(atk.maxRage, atk.atkRage + rageGain);
@@ -2213,9 +2213,8 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
         applyTorment(teamA[idxA], teamB[idxB]);
       }
 
-      // 交代処理: CTBリセット＋キャリーオーバーなし時は最初行動のレイジ増加なし
+      // 交代処理: CTBリセット。通常攻撃なら交代直後でもレイジは増加する。
       chargeA = 0; chargeB = 0;
-      if (!actionHadCarryover) actor.suppressRageGain = true;
       logNewMatchup();
       snap();
       continue;
