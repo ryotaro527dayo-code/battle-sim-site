@@ -2178,7 +2178,11 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     const timeToB = (CHARGE_MAX - chargeB) / b.agi;
 
     let actor, defender, isActorA, timeAdv;
-    if (timeToA <= timeToB) {
+    if (timeToA < timeToB) {
+      timeAdv = timeToA; actor = a; defender = b; isActorA = true;
+    } else if (timeToB < timeToA) {
+      timeAdv = timeToB; actor = b; defender = a; isActorA = false;
+    } else if (Math.random() < 0.5) {
       timeAdv = timeToA; actor = a; defender = b; isActorA = true;
     } else {
       timeAdv = timeToB; actor = b; defender = a; isActorA = false;
