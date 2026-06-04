@@ -661,8 +661,8 @@
         <option value="B" data-i18n="teamB">チームB</option>
       </select>
       <button class="preset-mini-btn" onclick="savePlayerPreset()" data-i18n="savePreset">保存</button>
-      <button class="preset-mini-btn" onclick="togglePresetExport()" data-i18n="showPresetData">一覧表示</button>
-      <button class="preset-mini-btn" onclick="copyPresetExport()" data-i18n="copyPresetData">コピー</button>
+      <button class="preset-mini-btn" onclick="togglePresetExport()" data-i18n="showAllPresetData">全体表示</button>
+      <button class="preset-mini-btn" onclick="copyPresetExport()" data-i18n="copyAllPresetData">全体コピー</button>
     </div>
   </div>
   <div class="preset-list" id="presetList"></div>
@@ -733,10 +733,12 @@ const I18N = {
     playerPresets: 'プレイヤー保存',
     presetNamePlaceholder: 'プレイヤー名',
     savePreset: '保存',
-    showPresetData: '一覧表示',
+    showAllPresetData: '全体表示',
+    copyAllPresetData: '全体コピー',
+    showPresetData: '表示',
     copyPresetData: 'コピー',
-    presetExported: '保存リストを表示しました',
-    presetCopied: '保存リストをコピーしました',
+    presetExported: '保存データを表示しました',
+    presetCopied: '保存データをコピーしました',
     loadToTeamA: 'Aへ反映',
     loadToTeamB: 'Bへ反映',
     deletePreset: '削除',
@@ -830,10 +832,12 @@ const I18N = {
     playerPresets: 'Player Presets',
     presetNamePlaceholder: 'Player name',
     savePreset: 'Save',
-    showPresetData: 'Show List',
+    showAllPresetData: 'Show All',
+    copyAllPresetData: 'Copy All',
+    showPresetData: 'Show',
     copyPresetData: 'Copy',
-    presetExported: 'Saved list is shown',
-    presetCopied: 'Saved list copied',
+    presetExported: 'Saved data is shown',
+    presetCopied: 'Saved data copied',
     loadToTeamA: 'Load to A',
     loadToTeamB: 'Load to B',
     deletePreset: 'Delete',
@@ -927,10 +931,12 @@ const I18N = {
     playerPresets: 'Пресеты игроков',
     presetNamePlaceholder: 'Имя игрока',
     savePreset: 'Сохранить',
+    showAllPresetData: 'Показать все',
+    copyAllPresetData: 'Копировать все',
     showPresetData: 'Показать',
     copyPresetData: 'Копировать',
-    presetExported: 'Список сохранений показан',
-    presetCopied: 'Список сохранений скопирован',
+    presetExported: 'Данные сохранения показаны',
+    presetCopied: 'Данные сохранения скопированы',
     loadToTeamA: 'В A',
     loadToTeamB: 'В B',
     deletePreset: 'Удалить',
@@ -1024,10 +1030,12 @@ const I18N = {
     playerPresets: '玩家保存',
     presetNamePlaceholder: '玩家名',
     savePreset: '保存',
-    showPresetData: '显示列表',
+    showAllPresetData: '显示全部',
+    copyAllPresetData: '复制全部',
+    showPresetData: '显示',
     copyPresetData: '复制',
-    presetExported: '已显示保存列表',
-    presetCopied: '已复制保存列表',
+    presetExported: '已显示保存数据',
+    presetCopied: '已复制保存数据',
     loadToTeamA: '应用到A',
     loadToTeamB: '应用到B',
     deletePreset: '删除',
@@ -1317,6 +1325,8 @@ function renderPlayerPresetList() {
         <div class="preset-meta">${t('savedFrom')}: ${source} / ${escapeHtml(presetSummary(preset))}</div>
       </div>
       <div class="preset-row-actions">
+        <button class="preset-mini-btn" onclick="showSinglePreset('${preset.id}')">${t('showPresetData')}</button>
+        <button class="preset-mini-btn" onclick="copySinglePreset('${preset.id}')">${t('copyPresetData')}</button>
         <button class="preset-mini-btn" onclick="loadPlayerPreset('${preset.id}','A')">${t('loadToTeamA')}</button>
         <button class="preset-mini-btn" onclick="loadPlayerPreset('${preset.id}','B')">${t('loadToTeamB')}</button>
         <button class="preset-mini-btn danger" onclick="deletePlayerPreset('${preset.id}')">${t('deletePreset')}</button>
@@ -1330,8 +1340,18 @@ function setPresetStatus(message) {
   if (el) el.textContent = message || '';
 }
 
-function getPresetExportText() {
-  return JSON.stringify(PLAYER_PRESETS, null, 2);
+function getPresetExportText(preset) {
+  return JSON.stringify(preset || PLAYER_PRESETS, null, 2);
+}
+
+function setPresetExportText(value) {
+  const box = document.getElementById('presetExportBox');
+  if (!box) return null;
+  box.value = value;
+  box.style.display = 'block';
+  box.focus();
+  box.select();
+  return box;
 }
 
 function togglePresetExport() {
@@ -1341,20 +1361,20 @@ function togglePresetExport() {
     box.style.display = 'none';
     return;
   }
-  box.value = getPresetExportText();
-  box.style.display = 'block';
-  box.focus();
-  box.select();
+  setPresetExportText(getPresetExportText());
   setPresetStatus(t('presetExported'));
 }
 
-function copyPresetExport() {
-  const box = document.getElementById('presetExportBox');
+function showSinglePreset(id) {
+  const preset = PLAYER_PRESETS.find(p => p.id === id);
+  if (!preset) return;
+  setPresetExportText(getPresetExportText(preset));
+  setPresetStatus(t('presetExported'));
+}
+
+function copyPresetText(text) {
+  const box = setPresetExportText(text);
   if (!box) return;
-  box.value = getPresetExportText();
-  box.style.display = 'block';
-  box.focus();
-  box.select();
   const done = () => setPresetStatus(t('presetCopied'));
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(box.value).then(done).catch(() => {
@@ -1363,6 +1383,18 @@ function copyPresetExport() {
   } else {
     try { document.execCommand('copy'); done(); } catch(e) {}
   }
+}
+
+function copySinglePreset(id) {
+  const preset = PLAYER_PRESETS.find(p => p.id === id);
+  if (!preset) return;
+  copyPresetText(getPresetExportText(preset));
+}
+
+function copyPresetExport() {
+  const box = document.getElementById('presetExportBox');
+  if (!box) return;
+  copyPresetText(getPresetExportText());
 }
 
 function savePlayerPreset() {
