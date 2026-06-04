@@ -1887,8 +1887,9 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
 
   const checkUndying = (target) => {
     if (target.hp <= 0 && target.hasPassive('undying') && !target.undyingUsed) {
-      target.undyingUsed = true;
       const recoverAmt = getParam(target.data, 'undying', 'param', 0.05);
+      if (recoverAmt <= 0) return;
+      target.undyingUsed = true;
       target.hp = Math.ceil(target.maxHP * recoverAmt);
       push('log-buff', t('undying', fighterName(target), target.hp));
     }
