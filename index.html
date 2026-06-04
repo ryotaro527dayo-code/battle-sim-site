@@ -1250,12 +1250,31 @@ const OVERRIDES = {};
 const SLOT_STAT = { A: {}, B: {} };
 const PLAYER_PRESETS = [];
 
-function getParam(charId, effect, key, fallback) {
-  const k = `${charId}.${effect}.${key}`;
+function getParam(charOrData, effect, key, fallback) {
+  const slotKey = effect + '.' + key;
+  if (charOrData && typeof charOrData === 'object') {
+    if (charOrData.paramOverrides && charOrData.paramOverrides[slotKey] !== undefined) {
+      return charOrData.paramOverrides[slotKey];
+    }
+    charOrData = charOrData.id;
+  }
+  const k = charOrData + '.' + effect + '.' + key;
   return OVERRIDES[k] !== undefined ? OVERRIDES[k] : fallback;
 }
 function setParam(charId, effect, key, val) {
-  OVERRIDES[`${charId}.${effect}.${key}`] = val;
+  OVERRIDES[charId + '.' + effect + '.' + key] = val;
+  saveToStorage();
+}
+function getSlotParam(side, idx, charId, effect, key, fallback) {
+  const slot = SLOT_STAT[side]?.[idx];
+  const slotKey = effect + '.' + key;
+  if (slot?.params && slot.params[slotKey] !== undefined) return slot.params[slotKey];
+  return getParam(charId, effect, key, fallback);
+}
+function setSlotParam(side, idx, effect, key, val) {
+  if (!SLOT_STAT[side][idx]) SLOT_STAT[side][idx] = {};
+  if (!SLOT_STAT[side][idx].params) SLOT_STAT[side][idx].params = {};
+  SLOT_STAT[side][idx].params[effect + '.' + key] = val;
   saveToStorage();
 }
 function saveToStorage() {
@@ -1289,18 +1308,51 @@ function cloneSlotStats(side) {
   const out = {};
   Object.keys(SLOT_STAT[side] || {}).forEach(idx => {
     out[idx] = Object.assign({}, SLOT_STAT[side][idx]);
+    if (SLOT_STAT[side][idx]?.params) out[idx].params = Object.assign({}, SLOT_STAT[side][idx].params);
   });
   return out;
 }
 
-function collectOverrideSnapshot(charIds) {
-  const ids = new Set(charIds.filter(Boolean));
+function collectOverrideSnapshot(side, charIds) {
   const out = {};
-  Object.keys(OVERRIDES).forEach(key => {
-    const charId = key.split('.')[0];
-    if (ids.has(charId)) out[key] = OVERRIDES[key];
+  charIds.forEach((charId, idx) => {
+    if (!charId) return;
+    const slotParams = SLOT_STAT[side]?.[idx]?.params || {};
+    const skills = CHARS[charId]?.skills || [];
+    skills.forEach(skill => {
+      if (skill.rageCost !== undefined) {
+        out[charId + '.' + skill.effect + '.rageCost'] = slotParams[skill.effect + '.rageCost'] ?? getParam(charId, skill.effect, 'rageCost', skill.rageCost);
+      }
+      const info = PARAM_INFO[skill.effect] || {};
+      if (info.param) {
+        out[charId + '.' + skill.effect + '.param'] = slotParams[skill.effect + '.param'] ?? getParam(charId, skill.effect, 'param', skill.param ?? info.param[2]);
+      }
+      if (info.param2) {
+        out[charId + '.' + skill.effect + '.param2'] = slotParams[skill.effect + '.param2'] ?? getParam(charId, skill.effect, 'param2', skill.param2 ?? info.param2[2]);
+      }
+    });
   });
   return out;
+}
+
+function applyLegacyOverridesToSlotStats(preset, targetSide) {
+  const overrides = preset.overrides || {};
+  Object.keys(overrides).forEach(fullKey => {
+    const parts = fullKey.split('.');
+    if (parts.length < 3) return;
+    const charId = parts[0];
+    const effect = parts[1];
+    const key = parts.slice(2).join('.');
+    (preset.slots || []).forEach((slotCharId, idx) => {
+      if (slotCharId !== charId) return;
+      if (!SLOT_STAT[targetSide][idx]) SLOT_STAT[targetSide][idx] = {};
+      if (!SLOT_STAT[targetSide][idx].params) SLOT_STAT[targetSide][idx].params = {};
+      const slotKey = effect + '.' + key;
+      if (SLOT_STAT[targetSide][idx].params[slotKey] === undefined) {
+        SLOT_STAT[targetSide][idx].params[slotKey] = overrides[fullKey];
+      }
+    });
+  });
 }
 
 function presetSummary(preset) {
@@ -1409,7 +1461,7 @@ function savePlayerPreset() {
     sourceSide,
     slots,
     slotStats: cloneSlotStats(sourceSide),
-    overrides: collectOverrideSnapshot(slots),
+    overrides: collectOverrideSnapshot(sourceSide, slots),
     savedAt: Date.now(),
   };
   PLAYER_PRESETS.unshift(preset);
@@ -1429,8 +1481,9 @@ function loadPlayerPreset(id, targetSide) {
   Object.keys(SLOT_STAT[targetSide]).forEach(key => delete SLOT_STAT[targetSide][key]);
   Object.keys(preset.slotStats || {}).forEach(key => {
     SLOT_STAT[targetSide][key] = Object.assign({}, preset.slotStats[key]);
+    if (preset.slotStats[key]?.params) SLOT_STAT[targetSide][key].params = Object.assign({}, preset.slotStats[key].params);
   });
-  Object.assign(OVERRIDES, preset.overrides || {});
+  applyLegacyOverridesToSlotStats(preset, targetSide);
   saveToStorage();
   rebuildTeamBuilder();
   renderPlayerPresetList();
@@ -1731,15 +1784,15 @@ class Fighter {
     if (!bc) return;
     if (bc.effect === 'heavy_wound') {
       this.firstDodge = true;
-      this.damageBonusPercent = getParam(this.data.id, 'heavy_wound', 'param', bc.param);
+      this.damageBonusPercent = getParam(this.data, 'heavy_wound', 'param', bc.param);
     }
     if (bc.effect === 'attack_talent') {
-      this.attackRageBonus = getParam(this.data.id, 'attack_talent', 'param', bc.param || 3);
+      this.attackRageBonus = getParam(this.data, 'attack_talent', 'param', bc.param || 3);
     }
     if (bc.effect === 'rapid') {
-      const speedUp = getParam(this.data.id, 'rapid', 'param', bc.param || 0.03);
+      const speedUp = getParam(this.data, 'rapid', 'param', bc.param || 0.03);
       this.agi = Math.max(1, Math.round(this.agi * (1 + speedUp)));
-      this.rapidAtkPenalty = getParam(this.data.id, 'rapid', 'param2', bc.param2 || 0.02);
+      this.rapidAtkPenalty = getParam(this.data, 'rapid', 'param2', bc.param2 || 0.02);
     }
     // torment は applyTorment() で両者に適用するためここでは処理しない
     // waver は動的に処理
@@ -1760,12 +1813,12 @@ class Fighter {
     const wildSkill = this.data.skills.find(s => s.type === 'passive' && s.effect === 'wild');
     if (wildSkill) {
       const stacks = Math.floor((1 - this.hp / this.maxHP) * 10);
-      mult *= (1 + stacks * getParam(this.data.id, 'wild', 'param', wildSkill.param || 0.05));
+      mult *= (1 + stacks * getParam(this.data, 'wild', 'param', wildSkill.param || 0.05));
     }
     const wildWeakSkill = this.data.skills.find(s => s.type === 'passive' && s.effect === 'wild_weak');
     if (wildWeakSkill) {
       const stacks = Math.floor((1 - this.hp / this.maxHP) * 10);
-      mult *= (1 + stacks * getParam(this.data.id, 'wild_weak', 'param', wildWeakSkill.param || 0.03));
+      mult *= (1 + stacks * getParam(this.data, 'wild_weak', 'param', wildWeakSkill.param || 0.03));
     }
 
     // 戦吼-急速: 速度上昇の代わりに攻撃力DOWN
@@ -1773,8 +1826,8 @@ class Fighter {
 
     // 戦吼-動揺
     if (this.hasBattleCry('waver')) {
-      const waverBonus   = getParam(this.data.id, 'waver', 'param',  0.15);
-      const waverPenalty = getParam(this.data.id, 'waver', 'param2', 0.10);
+      const waverBonus   = getParam(this.data, 'waver', 'param',  0.15);
+      const waverPenalty = getParam(this.data, 'waver', 'param2', 0.10);
       if (this.attackCount < 3) mult *= (1 - waverPenalty);
       else if (this.attackCount < 6) mult *= (1 + waverBonus);
     }
@@ -1784,13 +1837,13 @@ class Fighter {
 
   getActiveAttackSkill() {
     return this.data.skills.find(s =>
-      s.type === 'attack' && this.atkRage >= getParam(this.data.id, s.effect, 'rageCost', s.rageCost || 0)
+      s.type === 'attack' && this.atkRage >= getParam(this.data, s.effect, 'rageCost', s.rageCost || 0)
     ) || null;
   }
 
   getActiveDefenseSkill() {
     return this.data.skills.find(s =>
-      s.type === 'defense' && this.defRage >= getParam(this.data.id, s.effect, 'rageCost', s.rageCost || 0)
+      s.type === 'defense' && this.defRage >= getParam(this.data, s.effect, 'rageCost', s.rageCost || 0)
     ) || null;
   }
 
@@ -1813,7 +1866,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
   const checkUndying = (target) => {
     if (target.hp <= 0 && target.hasPassive('undying') && !target.undyingUsed) {
       target.undyingUsed = true;
-      const recoverAmt = getParam(target.data.id, 'undying', 'param', 0.05);
+      const recoverAmt = getParam(target.data, 'undying', 'param', 0.05);
       target.hp = Math.ceil(target.maxHP * recoverAmt);
       push('log-buff', t('undying', fighterName(target), target.hp));
     }
@@ -1827,22 +1880,22 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     // === 防御スキル（反応型）: 攻撃を受ける側がレイジ消費して発動 ===
     const defReactSkill = def.getActiveDefenseSkill();
     if (defReactSkill) {
-      const rc = getParam(def.data.id, defReactSkill.effect, 'rageCost', defReactSkill.rageCost || 0);
+      const rc = getParam(def.data, defReactSkill.effect, 'rageCost', defReactSkill.rageCost || 0);
       def.defRage -= rc;
       if (defReactSkill.effect === 'harden') {
         def.hardenReady = true;
-        def.hardenParam = getParam(def.data.id, 'harden', 'param', defReactSkill.param || 0.20);
+        def.hardenParam = getParam(def.data, 'harden', 'param', defReactSkill.param || 0.20);
         push('log-skill', t('hardenUse', fighterName(def), skillName(defReactSkill), Math.round(def.hardenParam*100)));
       } else if (defReactSkill.effect === 'thorns') {
         def.thornsReady = true;
-        def.thornsParam = getParam(def.data.id, 'thorns', 'param', defReactSkill.param || 0.20);
+        def.thornsParam = getParam(def.data, 'thorns', 'param', defReactSkill.param || 0.20);
         push('log-skill', t('thornsUse', fighterName(def), skillName(defReactSkill), Math.round(def.thornsParam*100)));
       } else if (defReactSkill.effect === 'purify') {
         let removed = 0;
         if (def.damageBonusTurns > 0) { def.damageBonusTurns = Math.max(0, def.damageBonusTurns - 2); removed++; }
         if (def.agiDebuffAttacksLeft > 0) { def.agiDebuffAttacksLeft = Math.max(0, def.agiDebuffAttacksLeft - 2); removed++; }
         if (def.lacerateTurns > 0) { def.lacerateTurns = Math.max(0, def.lacerateTurns - 2); removed++; }
-        const heal = Math.min(removed * 2, 2) * getParam(def.data.id, 'purify', 'param', defReactSkill.param || 5);
+        const heal = Math.min(removed * 2, 2) * getParam(def.data, 'purify', 'param', defReactSkill.param || 5);
         if (heal > 0) def.hp = Math.min(def.maxHP, def.hp + heal);
         push('log-buff', t('purifyUse', fighterName(def), skillName(defReactSkill), Math.min(removed*2,2), heal));
       }
@@ -1857,7 +1910,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     const atkSkill = skipSkill ? null : atk.getActiveAttackSkill();
     if (atkSkill) {
       push('log-skill', t('skillUse', fighterName(atk), skillName(atkSkill)));
-      atk.atkRage -= getParam(atk.data.id, atkSkill.effect, 'rageCost', atkSkill.rageCost || 0);
+      atk.atkRage -= getParam(atk.data, atkSkill.effect, 'rageCost', atkSkill.rageCost || 0);
     } else if (skipByDodge && atk.getActiveAttackSkill()) {
       push('log-buff', t('dodgeNormal', fighterName(def), fighterName(atk)));
     }
@@ -1869,7 +1922,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
 
     // 大地震撼: メイン攻撃を140%に強化
     if (atkSkill?.effect === 'quake') {
-      const quakeRatio = getParam(atk.data.id, 'quake', 'param', atkSkill.param || 1.40);
+      const quakeRatio = getParam(atk.data, 'quake', 'param', atkSkill.param || 1.40);
       dmg = Math.round(baseATK * quakeRatio * variance);
     }
 
@@ -1906,7 +1959,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     // ダメージ適用
     def.hp = Math.max(0, def.hp - dmg);
     checkUndying(def);
-    const defRageGain = Math.max(0, Math.round(def.will * 0.2778) - (def.hasBattleCry('attack_talent') ? getParam(def.data.id, 'attack_talent', 'param', 3) : 0));
+    const defRageGain = Math.max(0, Math.round(def.will * 0.2778) - (def.hasBattleCry('attack_talent') ? getParam(def.data, 'attack_talent', 'param', 3) : 0));
     def.defRage = Math.min(def.maxRage, def.defRage + defRageGain);
     if (def.thornsReady) {
       const reflectDmg = Math.round(dmg * def.thornsParam);
@@ -1916,8 +1969,8 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     }
     if (atk.hasPassive('hunter_mark')) {
       const markSkill = atk.data.skills.find(s => s.type === 'passive' && s.effect === 'hunter_mark');
-      const markStep = getParam(atk.data.id, 'hunter_mark', 'param', markSkill?.param || 9);
-      const markMax = getParam(atk.data.id, 'hunter_mark', 'param2', markSkill?.param2 || markStep * 10);
+      const markStep = getParam(atk.data, 'hunter_mark', 'param', markSkill?.param || 9);
+      const markMax = getParam(atk.data, 'hunter_mark', 'param2', markSkill?.param2 || markStep * 10);
       atk.hunterMarkBonus = Math.min(markMax, atk.hunterMarkBonus + markStep);
     }
     // 通常攻撃のみレイジ増加（レイジスキル使用時・交代直後は増加しない）
@@ -1946,7 +1999,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       if (atkSkill.effect === 'combo') {
         // 連撃: メイン攻撃後に追加打
         // 注意: hardenはメイン攻撃のみに適用されるため、comboMult は harden なしで再計算
-        const comboRatio = getParam(atk.data.id, 'combo', 'param', atkSkill.param || 0.60);
+        const comboRatio = getParam(atk.data, 'combo', 'param', atkSkill.param || 0.60);
         const comboVariance = 0.95 + Math.random() * 0.10;
 
         // 1撃目で相手が倒れた場合、2撃目は次の敵へキャリーオーバー（回避・不屈無効）
@@ -1974,30 +2027,30 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           atk.attackCount++;
           if (atk.hasPassive('hunter_mark')) {
             const markSkill = atk.data.skills.find(s => s.type === 'passive' && s.effect === 'hunter_mark');
-            const markStep = getParam(atk.data.id, 'hunter_mark', 'param', markSkill?.param || 9);
-            const markMax = getParam(atk.data.id, 'hunter_mark', 'param2', markSkill?.param2 || markStep * 10);
+            const markStep = getParam(atk.data, 'hunter_mark', 'param', markSkill?.param || 9);
+            const markMax = getParam(atk.data, 'hunter_mark', 'param2', markSkill?.param2 || markStep * 10);
             atk.hunterMarkBonus = Math.min(markMax, atk.hunterMarkBonus + markStep);
           }
           const carryLog = comboCarryOver ? t('carryOver', fighterName(comboTarget)) : '';
           push('log-skill', t('comboHit', comboDmg, carryLog, fighterName(comboTarget), comboTarget.hp));
         }
       } else if (atkSkill.effect === 'slow') {
-        const slowRate = getParam(atk.data.id, 'slow', 'param', atkSkill.param || 0.12);
+        const slowRate = getParam(atk.data, 'slow', 'param', atkSkill.param || 0.12);
         const agiDown = Math.round(def.agi * slowRate);
         def.agi = Math.max(1, def.agi - agiDown);
         def.agiDebuffAttacksLeft = 2;
         def.agiDebuffAmount += agiDown;
         push('log-debuff', t('slowEffect', fighterName(def), agiDown, def.agi));
       } else if (atkSkill.effect === 'breakthrough') {
-        const btAmt = getParam(atk.data.id, 'breakthrough', 'param', atkSkill.param || 13);
+        const btAmt = getParam(atk.data, 'breakthrough', 'param', atkSkill.param || 13);
         const atkDown = Math.min(btAmt, def.atkRage);
         const defDown = Math.min(btAmt, def.defRage);
         def.atkRage = Math.max(0, def.atkRage - btAmt);
         def.defRage = Math.max(0, def.defRage - btAmt);
         push('log-debuff', t('breakthroughEffect', fighterName(def), atkDown, defDown));
       } else if (atkSkill.effect === 'quake') {
-        push('log-skill', t('quakeEffect', Math.round(getParam(atk.data.id,'quake','param',atkSkill.param||1.40)*100)));
-        const benchRatio = getParam(atk.data.id, 'quake', 'param2', atkSkill.param2 || 0);
+        push('log-skill', t('quakeEffect', Math.round(getParam(atk.data,'quake','param',atkSkill.param||1.40)*100)));
+        const benchRatio = getParam(atk.data, 'quake', 'param2', atkSkill.param2 || 0);
         if (benchRatio > 0 && defTeam) {
           for (let i = defIdx + 1; i < defTeam.length; i++) {
             const benched = defTeam[i];
@@ -2011,10 +2064,10 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
         }
       } else if (atkSkill.effect === 'lacerate') {
         def.lacerateTurns = 3;
-        def.lacerateParam = getParam(atk.data.id, 'lacerate', 'param', atkSkill.param || 0.045);
+        def.lacerateParam = getParam(atk.data, 'lacerate', 'param', atkSkill.param || 0.045);
         push('log-debuff', t('lacerateEffect', fighterName(def), Math.round(def.lacerateParam*100)));
       } else if (atkSkill.effect === 'drain') {
-        const healAmt = Math.round(dmg * getParam(atk.data.id, 'drain', 'param', atkSkill.param || 0.40));
+        const healAmt = Math.round(dmg * getParam(atk.data, 'drain', 'param', atkSkill.param || 0.40));
         atk.hp = Math.min(atk.maxHP, atk.hp + healAmt);
         push('log-buff', t('drainEffect', fighterName(atk), healAmt, atk.hp));
       }
@@ -2028,7 +2081,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     [a, b].forEach(f => {
       const bc = f.data.skills.find(s => s.type === 'battlecry' && s.effect === 'torment');
       if (bc) {
-        const p = getParam(f.data.id, 'torment', 'param', bc.param || 0.25);
+        const p = getParam(f.data, 'torment', 'param', bc.param || 0.25);
         a.tormentBonus += p;
         b.tormentBonus += p;
         push('log-debuff', t('tormentStart', fighterName(f), Math.round(p*100)));
@@ -2072,11 +2125,11 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     if (b.hasBattleCry('attack_talent')) push('log-buff', t('attackTalentStart', fighterName(b)));
     if (a.hasBattleCry('rapid')) {
       const s = a.data.skills.find(skill => skill.effect === 'rapid');
-      push('log-buff', t('rapidStart', fighterName(a), Math.round(getParam(a.data.id, 'rapid', 'param', s?.param || 0.03) * 100), Math.round(getParam(a.data.id, 'rapid', 'param2', s?.param2 || 0.02) * 100)));
+      push('log-buff', t('rapidStart', fighterName(a), Math.round(getParam(a.data, 'rapid', 'param', s?.param || 0.03) * 100), Math.round(getParam(a.data, 'rapid', 'param2', s?.param2 || 0.02) * 100)));
     }
     if (b.hasBattleCry('rapid')) {
       const s = b.data.skills.find(skill => skill.effect === 'rapid');
-      push('log-buff', t('rapidStart', fighterName(b), Math.round(getParam(b.data.id, 'rapid', 'param', s?.param || 0.03) * 100), Math.round(getParam(b.data.id, 'rapid', 'param2', s?.param2 || 0.02) * 100)));
+      push('log-buff', t('rapidStart', fighterName(b), Math.round(getParam(b.data, 'rapid', 'param', s?.param || 0.03) * 100), Math.round(getParam(b.data, 'rapid', 'param2', s?.param2 || 0.02) * 100)));
     }
     if (a.hasBattleCry('waver')) push('log-buff', t('waverStart', fighterName(a)));
     if (b.hasBattleCry('waver')) push('log-buff', t('waverStart', fighterName(b)));
@@ -2285,22 +2338,22 @@ function renderSlotEditor(side, idx) {
       html += `<span style="color:var(--text-dim);font-size:0.72rem">${t('unavailable')}</span>`;
     }
     if (hasRage) {
-      const cur = getParam(charId, skill.effect, 'rageCost', skill.rageCost);
+      const cur = getSlotParam(side, idx, charId, skill.effect, 'rageCost', skill.rageCost);
       const lbl = skill.type === 'defense' ? t('defenseRage') : t('attackRage');
-      html += `<div class="skill-edit-field"><span>${lbl}</span><input type="number" value="${cur}" min="0" max="100" oninput="setParam('${charId}','${skill.effect}','rageCost',parseInt(this.value)||0)"></div>`;
+      html += `<div class="skill-edit-field"><span>${lbl}</span><input type="number" value="${cur}" min="0" max="100" oninput="setSlotParam('${side}',${idx},'${skill.effect}','rageCost',parseInt(this.value)||0)"></div>`;
     }
     if (hasParam) {
       const [label, isPercent, defaultVal] = info.param;
-      const raw = getParam(charId, skill.effect, 'param', skill.param ?? defaultVal);
+      const raw = getSlotParam(side, idx, charId, skill.effect, 'param', skill.param ?? defaultVal);
       const disp = isPercent ? Math.round(raw * 100) : raw;
-      const onChange = isPercent ? `setParam('${charId}','${skill.effect}','param',parseFloat(this.value)/100)` : `setParam('${charId}','${skill.effect}','param',parseFloat(this.value)||0)`;
+      const onChange = isPercent ? `setSlotParam('${side}',${idx},'${skill.effect}','param',parseFloat(this.value)/100)` : `setSlotParam('${side}',${idx},'${skill.effect}','param',parseFloat(this.value)||0)`;
       html += `<div class="skill-edit-field"><span>${paramLabel(label)}:</span><input type="number" value="${disp}" min="0" max="${isPercent?300:999}" step="1" oninput="${onChange}">${isPercent?'%':''}</div>`;
     }
     if (info.param2) {
       const [label2, isPercent2, defaultVal2] = info.param2;
-      const raw2 = getParam(charId, skill.effect, 'param2', defaultVal2);
+      const raw2 = getSlotParam(side, idx, charId, skill.effect, 'param2', defaultVal2);
       const disp2 = isPercent2 ? Math.round(raw2 * 100) : raw2;
-      const onChange2 = isPercent2 ? `setParam('${charId}','${skill.effect}','param2',parseFloat(this.value)/100)` : `setParam('${charId}','${skill.effect}','param2',parseFloat(this.value)||0)`;
+      const onChange2 = isPercent2 ? `setSlotParam('${side}',${idx},'${skill.effect}','param2',parseFloat(this.value)/100)` : `setSlotParam('${side}',${idx},'${skill.effect}','param2',parseFloat(this.value)||0)`;
       html += `<div class="skill-edit-field"><span>${paramLabel(label2)}:</span><input type="number" value="${disp2}" min="0" max="${isPercent2?300:999}" step="1" oninput="${onChange2}">${isPercent2?'%':''}</div>`;
     }
     html += `</div></div>`;
@@ -2320,6 +2373,7 @@ function getTeamData(side) {
       will:     ov.will     ?? base.will,
       lv:       ov.lv       ?? base.lv,
       hp_start: ov.hp_start ?? null,
+      paramOverrides: Object.assign({}, ov.params || {}),
     });
   }).filter(Boolean);
 }
@@ -2490,17 +2544,17 @@ function toggleConfigSummary() {
         const info = PARAM_INFO[s.effect] || {};
         let detail = '';
         if (s.rageCost !== undefined) {
-          const rc = getParam(c.id, s.effect, 'rageCost', s.rageCost);
+          const rc = getParam(c, s.effect, 'rageCost', s.rageCost);
           detail += `${t('cost')}<b>${rc}</b> `;
         }
         if (info.param) {
           const [lbl, isPct] = info.param;
-          const val = getParam(c.id, s.effect, 'param', s.param ?? info.param[2]);
+          const val = getParam(c, s.effect, 'param', s.param ?? info.param[2]);
           detail += `${paramLabel(lbl)}:<b>${isPct ? Math.round(val*100)+'%' : val}</b> `;
         }
         if (info.param2) {
           const [lbl2, isPct2] = info.param2;
-          const val2 = getParam(c.id, s.effect, 'param2', s.param2 ?? info.param2[2]);
+          const val2 = getParam(c, s.effect, 'param2', s.param2 ?? info.param2[2]);
           if (val2) detail += `${paramLabel(lbl2)}:<b>${isPct2 ? Math.round(val2*100)+'%' : val2}</b>`;
         }
         skillRows += `<div class="config-skill-row">${skillName(s)}${detail ? ' - ' + detail : ''}</div>`;
