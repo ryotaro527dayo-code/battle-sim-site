@@ -1963,13 +1963,21 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       damageBonusConsumed = true;
     }
     dmgMult += def.tormentBonus; // 折磨: 被弾側の永続デバフ
-    if (def.hardenReady) {
+    if (def.hardenReady && atkSkill?.effect !== 'quake') {
       dmgMult = Math.max(0, dmgMult - (def.hardenParam || 0.20));
       def.hardenReady = false;
       push('log-buff', t('hardenTriggered', fighterName(def)));
     }
     dmg = Math.round(dmg * dmgMult);
-    if (quakeNormalDmg > 0) quakeNormalDmg = Math.round(quakeNormalDmg * dmgMult);
+    if (quakeNormalDmg > 0) {
+      let quakeNormalMult = dmgMult;
+      if (def.hardenReady) {
+        quakeNormalMult = Math.max(0, quakeNormalMult - (def.hardenParam || 0.20));
+        def.hardenReady = false;
+        push('log-buff', t('hardenTriggered', fighterName(def)));
+      }
+      quakeNormalDmg = Math.round(quakeNormalDmg * quakeNormalMult);
+    }
 
     // 初回回避チェック
     if (def.firstDodge) {
