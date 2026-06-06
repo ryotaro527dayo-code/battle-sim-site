@@ -1814,7 +1814,7 @@ class Fighter {
       this.agi = Math.max(1, Math.round(this.agi * (1 + speedUp)));
       this.rapidAtkPenalty = getParam(this.data, 'rapid', 'param2', bc.param2 || 0.02);
     }
-    // torment は applyTorment() で両者に適用するためここでは処理しない
+    // torment は applyEntryBattleCries() で両者に適用するためここでは処理しない
     // waver は動的に処理
   }
 
@@ -2064,7 +2064,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
           comboTarget = defTeam[defIdx + 1];
           comboCarryOver = true;
           actionHadCarryover = true;
-          applyTorment(atk, comboTarget);
+          applyEntryBattleCries(atk, comboTarget);
           comboTarget.entryEffectsAppliedByCarryover = true;
         }
 
@@ -2153,19 +2153,20 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
     return def.hp <= 0;
   };
 
-  // 折磨を現在の対戦両者に適用（参戦時も再利用）
-  const applyTorment = (a, b) => {
-    [a, b].forEach(f => {
-      const bc = f.data.skills.find(s => s.type === 'battlecry' && s.effect === 'torment');
-      if (bc) {
-        const p = getParam(f.data, 'torment', 'param', bc.param || 0.25);
-        a.tormentBonus += p;
-        b.tormentBonus += p;
+  // 参戦時戦吼。キャリーオーバー時も2発目のダメージ前にここを通す。
+  const applyEntryBattleCries = (active, entering, includeActive = false) => {
+    const entrants = includeActive ? [active, entering] : [entering];
+    entrants.forEach(f => {
+      const torment = f.data.skills.find(s => s.type === 'battlecry' && s.effect === 'torment');
+      if (torment) {
+        const p = getParam(f.data, 'torment', 'param', torment.param || 0.25);
+        active.tormentBonus += p;
+        entering.tormentBonus += p;
         push('log-debuff', t('tormentStart', fighterName(f), Math.round(p*100)));
       }
     });
   };
-  applyTorment(teamA[0], teamB[0]);
+  applyEntryBattleCries(teamA[0], teamB[0], true);
 
   let idxA = 0, idxB = 0;
   let chargeA = 0, chargeB = 0;
@@ -2257,7 +2258,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
         if (teamB[idxB].entryEffectsAppliedByCarryover) {
           teamB[idxB].entryEffectsAppliedByCarryover = false;
         } else {
-          applyTorment(teamA[idxA], teamB[idxB]);
+          applyEntryBattleCries(teamA[idxA], teamB[idxB]);
         }
       } else {
         idxA++;
@@ -2266,7 +2267,7 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
         if (teamA[idxA].entryEffectsAppliedByCarryover) {
           teamA[idxA].entryEffectsAppliedByCarryover = false;
         } else {
-          applyTorment(teamA[idxA], teamB[idxB]);
+          applyEntryBattleCries(teamA[idxA], teamB[idxB]);
         }
       }
 
