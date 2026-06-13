@@ -814,6 +814,7 @@ const I18N = {
     rapidStart: (name, speedUp, atkDown) => `【${entity('skill_rapid')}】${name}：速度+${speedUp}%・攻撃-${atkDown}%`,
     waverStart: (name) => `【${entity('skill_waver')}】${name}：最初3攻撃-10%、次3攻撃+15%`,
     sacrificeStart: (name, hpCost, atkPct, hp) => `【${entity('skill_sacrifice')}】${name}が発動！HP${hpCost}を奉納し攻撃+${atkPct}% [残HP:${hp}]`,
+    godPowerStart: (name, atkUp, speedDown) => `【${entity('skill_god_power')}】${name}：攻撃+${atkUp}%・速度-${speedDown}%`,
     devourHeal: (name, heal, hp) => `   └ ${entity('skill_devour')}！${name}がHP+${heal}回復 [残HP:${hp}]`,
     counterUse: (name, skill, pct) => `🛡️ ${name}が【${skill}】を発動！次の被弾時に攻撃${pct}%で反撃`,
     counterHit: (name, target, dmg, hp) => `   └ ${name}の反撃！${target}に${dmg}ダメージ [${target}残HP:${hp}]`,
@@ -926,6 +927,7 @@ const I18N = {
     rapidStart: (name, speedUp, atkDown) => `[${entity('skill_rapid')}] ${name}: speed +${speedUp}%, attack -${atkDown}%`,
     waverStart: (name) => `[${entity('skill_waver')}] ${name}: first 3 attacks -10%, next 3 attacks +15%`,
     sacrificeStart: (name, hpCost, atkPct, hp) => `[${entity('skill_sacrifice')}] ${name} activates! Offers ${hpCost} HP, attack +${atkPct}% [HP:${hp}]`,
+    godPowerStart: (name, atkUp, speedDown) => `[${entity('skill_god_power')}] ${name}: attack +${atkUp}%, speed -${speedDown}%`,
     devourHeal: (name, heal, hp) => `   └ ${entity('skill_devour')}! ${name} recovers HP +${heal} [HP:${hp}]`,
     counterUse: (name, skill, pct) => `🛡️ ${name} activates [${skill}]! Counters the next hit with ${pct}% ATK`,
     counterHit: (name, target, dmg, hp) => `   └ ${name} counters! ${target} takes ${dmg} damage [${target} HP:${hp}]`,
@@ -1038,6 +1040,7 @@ const I18N = {
     rapidStart: (name, speedUp, atkDown) => `[${entity('skill_rapid')}] ${name}: скорость +${speedUp}%, атака -${atkDown}%`,
     waverStart: (name) => `[${entity('skill_waver')}] ${name}: первые 3 атаки -10%, следующие 3 +15%`,
     sacrificeStart: (name, hpCost, atkPct, hp) => `[${entity('skill_sacrifice')}] ${name} активирует! Жертвует ${hpCost} HP, атака +${atkPct}% [HP:${hp}]`,
+    godPowerStart: (name, atkUp, speedDown) => `[${entity('skill_god_power')}] ${name}: атака +${atkUp}%, скорость -${speedDown}%`,
     devourHeal: (name, heal, hp) => `   └ ${entity('skill_devour')}! ${name} восстанавливает HP +${heal} [HP:${hp}]`,
     counterUse: (name, skill, pct) => `🛡️ ${name} активирует [${skill}]! Контратака ${pct}% ATK при следующем ударе`,
     counterHit: (name, target, dmg, hp) => `   └ ${name} контратакует! ${target} получает ${dmg} урона [HP ${target}:${hp}]`,
@@ -1150,6 +1153,7 @@ const I18N = {
     rapidStart: (name, speedUp, atkDown) => `【${entity('skill_rapid')}】${name}: 速度+${speedUp}%・攻击-${atkDown}%`,
     waverStart: (name) => `【${entity('skill_waver')}】${name}: 前3次攻击-10%，后3次+15%`,
     sacrificeStart: (name, hpCost, atkPct, hp) => `【${entity('skill_sacrifice')}】${name}发动！奉纳${hpCost}HP，攻击+${atkPct}% [剩余HP:${hp}]`,
+    godPowerStart: (name, atkUp, speedDown) => `【${entity('skill_god_power')}】${name}: 攻击+${atkUp}%・速度-${speedDown}%`,
     devourHeal: (name, heal, hp) => `   └ ${entity('skill_devour')}！${name}恢复HP+${heal} [剩余HP:${hp}]`,
     counterUse: (name, skill, pct) => `🛡️ ${name}发动【${skill}】！下次受击以攻击${pct}%反击`,
     counterHit: (name, target, dmg, hp) => `   └ ${name}反击！${target}受到${dmg}伤害 [${target}剩余HP:${hp}]`,
@@ -1189,6 +1193,7 @@ const ENTITY_I18N = {
   mineral_rex: { en: 'Mineral Rex', ru: 'Минеральный Рекс', zh: '矿石雷克斯' },
   haou_tiger: { ja: '覇王タイガー', en: 'Overlord Tiger', ru: 'Тигр-владыка', zh: '霸王虎' },
   luminous_dragon: { ja: 'ルミナス鏡竜', en: 'Luminous Mirror Dragon', ru: 'Светозарный зеркальный дракон', zh: '光辉镜龙' },
+  silver_frost_rex: { ja: '銀霜レックス', en: 'Silver Frost Rex', ru: 'Серебряно-морозный Рекс', zh: '银霜雷克斯' },
   ankylosaurus: { ja: 'アンキロサウルス', en: 'Ankylosaurus', ru: 'Анкилозавр', zh: '甲龙' },
   feather_serpent: { ja: '羽蛇竜', en: 'Feathered Serpent Dragon', ru: 'Пернатый змей-дракон', zh: '羽蛇龙' },
   skill_combo: { ja: '攻撃-連撃', en: 'Attack - Combo', ru: 'Атака - Комбо', zh: '攻击-连击' },
@@ -1211,6 +1216,7 @@ const ENTITY_I18N = {
   skill_attack_talent: { ja: '戦吼-攻撃タレント', en: 'Battlecry - Attack Talent', ru: 'Боевой клич - Талант атаки', zh: '战吼-攻击天赋' },
   skill_full_power: { ja: '攻撃-全力一撃', en: 'Attack - All-Out Strike', ru: 'Атака - Удар во всю силу', zh: '攻击-全力一击' },
   skill_sacrifice: { ja: '戦吼-奉納', en: 'Battlecry - Offering', ru: 'Боевой клич - Подношение', zh: '战吼-奉纳' },
+  skill_god_power: { ja: '戦吼-神力', en: 'Battlecry - Divine Power', ru: 'Боевой клич - Божественная сила', zh: '战吼-神力' },
   skill_devour: { ja: 'パッシブ-貪食', en: 'Passive - Devour', ru: 'Пассив - Пожирание', zh: '被动-贪食' },
   skill_counter: { ja: '防御-反撃', en: 'Defense - Counter', ru: 'Защита - Контратака', zh: '防御-反击' },
   skill_backwater: { ja: 'パッシブ-背水の陣', en: 'Passive - Last Stand', ru: 'Пассив - Последний рубеж', zh: '被动-背水之阵' },
@@ -1240,6 +1246,8 @@ const ENTITY_I18N = {
   param_full_power: { ja: 'ダメージ倍率', en: 'Damage ratio', ru: 'Множитель урона', zh: '伤害倍率' },
   param_sacrifice_hp: { ja: '奉納HP(最大HP)', en: 'Offered HP (max HP)', ru: 'Жертва HP (макс.)', zh: '奉纳HP(最大HP)' },
   param_sacrifice_atk: { ja: '攻撃UP', en: 'Attack up', ru: 'Атака +', zh: '攻击提升' },
+  param_god_power_atk: { ja: '攻撃UP', en: 'Attack up', ru: 'Атака +', zh: '攻击提升' },
+  param_god_power_speed: { ja: '速度DOWN', en: 'Speed down', ru: 'Скорость -', zh: '速度降低' },
   param_devour_heal: { ja: '撃破時HP回復', en: 'HP recovery on defeat', ru: 'HP при добивании', zh: '击败时HP恢复' },
   param_counter: { ja: '反撃倍率(攻撃力)', en: 'Counter ratio (ATK)', ru: 'Контратака (ATK)', zh: '反击倍率(攻击)' },
   param_backwater_hp: { ja: '最大HP増加', en: 'Max HP increase', ru: 'Макс. HP +', zh: '最大HP增加' },
@@ -1602,6 +1610,7 @@ const PARAM_INFO = {
   thorns:        { param: ['param_thorns',        true,  0.20] },
   heavy_wound:   { param: ['param_heavy_wound',   true,  0.20] },
   sacrifice:     { param: ['param_sacrifice_hp',  true,  0.10], param2: ['param_sacrifice_atk', true, 0.225] },
+  god_power:     { param: ['param_god_power_atk', true,  0.12], param2: ['param_god_power_speed', true, 0.08] },
   devour:        { param: ['param_devour_heal',   true,  0.25] },
   counter:       { param: ['param_counter',       true,  0.25] },
   backwater:     { param: ['param_backwater_hp',  true,  0.15], param2: ['param_backwater_hits', false, 2] },
@@ -1856,6 +1865,15 @@ const CHARS = {
       { name: '防御-反撃', type: 'defense', rageCost: 40, effect: 'counter', param: 0.25, desc: '次に攻撃を受けた時に攻撃力25%で反撃' },
       { name: 'パッシブ-野性', type: 'passive', effect: 'wild', param: 0.05, desc: 'HP10%毎に攻撃力+5%' }
     ]
+  },
+  silver_frost_rex: {
+    id: 'silver_frost_rex', name: '銀霜レックス', lv: 100, stars: 5, team: 'enemy',
+    dur: 832, atk: 418, agi: 415, will: 240,
+    skills: [
+      { name: '攻撃-傷口裂傷', type: 'attack', rageCost: 50, effect: 'lacerate', param: 0.05, desc: '敵が攻撃前に最大HP5%出血(3回)' },
+      { name: '防御-浄化術', type: 'defense', rageCost: 50, effect: 'purify', param: 8, desc: 'デバフ2スタック除去+8HP/スタック' },
+      { name: '戦吼-神力', type: 'battlecry', effect: 'god_power', param: 0.12, param2: 0.08, desc: '攻撃力+12%、速度-8%' }
+    ]
   }
 };
 
@@ -1934,6 +1952,12 @@ class Fighter {
       const speedUp = getParam(this.data, 'rapid', 'param', bc.param || 0.03);
       this.agi = Math.max(1, Math.round(this.agi * (1 + speedUp)));
       this.rapidAtkPenalty = getParam(this.data, 'rapid', 'param2', bc.param2 || 0.02);
+    }
+    if (bc.effect === 'god_power') {
+      const atkUp = getParam(this.data, 'god_power', 'param', bc.param || 0.12);
+      const speedDown = getParam(this.data, 'god_power', 'param2', bc.param2 || 0.08);
+      this.entryAtkBonus = (this.entryAtkBonus || 0) + atkUp;
+      this.agi = Math.max(1, Math.round(this.agi * (1 - speedDown)));
     }
     // torment は applyEntryBattleCries() で両者に適用するためここでは処理しない
     // waver は動的に処理
@@ -2405,6 +2429,14 @@ function simulateBattle6v6(teamDataA, teamDataB, verbose = true) {
       const s = b.data.skills.find(skill => skill.effect === 'rapid');
       push('log-buff', t('rapidStart', fighterName(b), Math.round(getParam(b.data, 'rapid', 'param', s?.param || 0.03) * 100), Math.round(getParam(b.data, 'rapid', 'param2', s?.param2 || 0.02) * 100)));
     }
+    if (a.hasBattleCry('god_power')) {
+      const s = a.data.skills.find(skill => skill.effect === 'god_power');
+      push('log-buff', t('godPowerStart', fighterName(a), Math.round(getParam(a.data, 'god_power', 'param', s?.param || 0.12) * 100), Math.round(getParam(a.data, 'god_power', 'param2', s?.param2 || 0.08) * 100)));
+    }
+    if (b.hasBattleCry('god_power')) {
+      const s = b.data.skills.find(skill => skill.effect === 'god_power');
+      push('log-buff', t('godPowerStart', fighterName(b), Math.round(getParam(b.data, 'god_power', 'param', s?.param || 0.12) * 100), Math.round(getParam(b.data, 'god_power', 'param2', s?.param2 || 0.08) * 100)));
+    }
     if (a.hasPassive('backwater') && a.backwaterHitsLeft > 0) push('log-buff', t('backwaterStart', fighterName(a), Math.round((a.backwaterHpUp || 0) * 100), a.maxHP));
     if (b.hasPassive('backwater') && b.backwaterHitsLeft > 0) push('log-buff', t('backwaterStart', fighterName(b), Math.round((b.backwaterHpUp || 0) * 100), b.maxHP));
     if (a.hasBattleCry('waver')) push('log-buff', t('waverStart', fighterName(a)));
@@ -2538,7 +2570,7 @@ function buildCharOptions() {
   const ids = [
     'kong','dark_rex','young_rex',
     'kibarra_rex_50','kibarra_rex','mini_rex','velociraptor','white_saber','tyrannorex','mineral_rex','golden_rex','ice_ptera',
-    'k_kong','k_kong_100','k_tyrex','gigant','haou_tiger','luminous_dragon','ankylosaurus','feather_serpent'
+    'k_kong','k_kong_100','k_tyrex','gigant','haou_tiger','luminous_dragon','ankylosaurus','feather_serpent','silver_frost_rex'
   ];
   const seen = new Set();
   const options = ids
